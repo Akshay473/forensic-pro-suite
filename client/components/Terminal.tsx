@@ -49,12 +49,53 @@ export default function ForensicTerminal() {
 
   const handleCommand = (cmd: string, term: Terminal) => {
     const command = cmd.trim().toLowerCase();
-    if (command === 'help') {
-      term.writeln('Available: autopsy, wireshark --cli, fls, mactime, vol.py');
-    } else if (command === 'autopsy') {
-      term.writeln('Initializing Sleuth Kit engine... scanning /dev/sda1...');
-    } else {
-      term.writeln(`Command "${command}" not found. Initializing AI lookup...`);
+    switch (command) {
+      case 'help':
+        term.writeln('Commands: autopsy, wireshark --cli, fls <image>, mactime, vol.py --info, hash <file>, clear');
+        break;
+      case 'autopsy':
+        term.writeln('[*] Initializing Sleuth Kit engine...');
+        term.writeln('[*] Mounting /dev/sda1 as read-only...');
+        term.writeln('[+] Partition table: MBR | 3 partitions found');
+        term.writeln('[+] File system: NTFS (offset 2048)');
+        term.writeln('[!] 4 deleted files recoverable in $Recycle.Bin');
+        term.writeln('[+] Scan complete. Open Autopsy GUI for full report.');
+        break;
+      case 'wireshark --cli':
+        term.writeln('[*] Capturing on eth0 (promiscuous mode)...');
+        term.writeln('  Frame 1: 192.168.1.5 -> 8.8.8.8  DNS Query: forensics.gov');
+        term.writeln('  Frame 2: 8.8.8.8 -> 192.168.1.5  DNS Response: 142.250.80.46');
+        term.writeln('  Frame 3: 192.168.1.5 -> 142.250.80.46  TCP SYN');
+        term.writeln('[!] Suspicious outbound connection on port 4444 detected.');
+        break;
+      case 'fls':
+      case 'fls <image>':
+        term.writeln('r/r 5:    $MFT');
+        term.writeln('r/r 6:    $MFTMirr');
+        term.writeln('d/d 11:   $Orphan');
+        term.writeln('r/r 128:  evidence.dd');
+        term.writeln('r/r 129:  suspect_chat_logs.txt (deleted)');
+        term.writeln('r/r 130:  payload.exe (deleted)');
+        break;
+      case 'mactime':
+        term.writeln('Mon Jan 13 2025 09:14:22  4096 m... d/d 11  /evidence');
+        term.writeln('Mon Jan 13 2025 09:15:01  2048 .a.. r/r 128 /evidence/suspect_chat_logs.txt');
+        term.writeln('Mon Jan 13 2025 09:15:44  512  mac. r/r 129 /evidence/payload.exe');
+        break;
+      case 'vol.py --info':
+        term.writeln('[*] Volatility 3 Framework');
+        term.writeln('[+] Profile: Win10x64_19041');
+        term.writeln('[+] Processes: 87 running | 3 suspicious (cmd.exe, powershell.exe, nc.exe)');
+        term.writeln('[!] Network connection: nc.exe -> 185.220.101.47:4444 (ESTABLISHED)');
+        term.writeln('[!] Possible reverse shell detected.');
+        break;
+      case 'clear':
+        term.clear();
+        break;
+      case '':
+        break;
+      default:
+        term.writeln(`bash: ${command}: command not found. Type "help" for available commands.`);
     }
   };
 

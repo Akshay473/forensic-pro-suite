@@ -1,7 +1,6 @@
 import hashlib
 import os
 import datetime
-import json
 
 class ForensicEngine:
     def __init__(self, evidence_path):
@@ -9,17 +8,14 @@ class ForensicEngine:
         self.report_data = {}
 
     def run_automated_process(self):
-        # 1. Identification & Preservation (Hashing)
         print("Starting Identification...")
         sha256 = self.generate_hash()
-        
-        # 2. Collection (Metadata Extraction)
+
         print("Collecting Metadata...")
         metadata = self.get_metadata()
-        
-        # 3. Analysis & Reporting
+
         self.report_data = {
-            "timestamp": str(datetime.datetime.now()),
+            "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "evidence_name": os.path.basename(self.evidence_path),
             "hash_sha256": sha256,
             "metadata": metadata,
@@ -38,10 +34,6 @@ class ForensicEngine:
         stats = os.stat(self.evidence_path)
         return {
             "size_bytes": stats.st_size,
-            "created": str(datetime.datetime.fromtimestamp(stats.st_ctime)),
-            "modified": str(datetime.datetime.fromtimestamp(stats.st_mtime))
+            "created": datetime.datetime.fromtimestamp(stats.st_ctime, tz=datetime.timezone.utc).isoformat(),
+            "modified": datetime.datetime.fromtimestamp(stats.st_mtime, tz=datetime.timezone.utc).isoformat(),
         }
-
-# Example usage for the API
-# engine = ForensicEngine("evidence.dd")
-# print(engine.run_automated_process())

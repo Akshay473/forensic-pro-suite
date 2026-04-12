@@ -1,42 +1,73 @@
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-import hashlib
-import time
+from engine import ForensicEngine
+import asyncio
+import tempfile
 import os
+import time
 
 app = FastAPI()
 
-# Enable CORS so your React frontend can talk to this Python backend
+allowed_origin = os.getenv("ALLOWED_ORIGIN", "http://localhost:3000")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"], 
+    allow_origins=[allowed_origin],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Forensic evidence file types — executables and scripts are explicitly excluded
+ALLOWED_EXTENSIONS = {
+    ".dd", ".img", ".e01", ".ex01", ".l01", ".s01",  # disk images
+    ".pcap", ".pcapng",                                # network captures
+    ".pdf", ".docx", ".xlsx", ".txt", ".csv", ".log", # documents / logs
+    ".jpg", ".jpeg", ".png", ".bmp", ".tiff",         # images
+    ".zip", ".tar", ".gz",                             # archives
+}
+
+MAX_FILE_SIZE = 500 * 1024 * 1024  # 500 MB
+
 @app.post("/api/analyze")
 async def run_forensic_pipeline(file: UploadFile = File(...)):
     try:
-        # Step 1: Identification (Read file and Hash it)
-        content = await file.read()
-        sha256_hash = hashlib.sha256(content).hexdigest()
+        ext = os.path.splitext(file.filename or "")[1].lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File type '{ext}' is not permitted. Allowed types: {', '.join(sorted(ALLOWED_EXTENSIONS))}"
+            )
 
-        # Step 2: Preservation & Collection (Simulated metadata extraction)
-        file_size = len(content)
-        
-        # Step 3: Automated Analysis (Simulating deep scan)
-        # In a real expert scenario, you would call 'sleuthkit' or 'volatility' here
-        time.sleep(2) # Simulating processing time for the "Expert" feel
-        
+        content = await file.read()
+
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(status_code=413, detail="File exceeds the 500 MB size limit.")
+
+        with tempfile.NamedTemporaryFile(delete=False, suffix=ext) as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+
+        try:
+            engine = ForensicEngine(tmp_path)
+            report = engine.run_automated_process()
+        finally:
+            os.unlink(tmp_path)
+
+        await asyncio.sleep(2)
+
         return {
             "id": f"CASE-{int(time.time())}",
             "filename": file.filename,
-            "hash": f"SHA256: {sha256_hash}",
-            "size": f"{file_size} bytes",
+            "hash": f"SHA256: {report['hash_sha256']}",
+            "size": f"{report['metadata']['size_bytes']} bytes",
+            "created": report['metadata']['created'],
+            "modified": report['metadata']['modified'],
             "status": "COMPLETED",
             "report_generated": True,
             "findings": "No malicious artifacts detected in initial triage."
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

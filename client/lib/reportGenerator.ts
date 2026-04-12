@@ -1,6 +1,10 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
+function sanitize(value: string): string {
+  return value.replace(/[<>&"'/\\]/g, (c) => `&#${c.charCodeAt(0)};`);
+}
+
 export const generateForensicReport = (data: {
   case_id: string;
   filename: string;
@@ -27,16 +31,16 @@ export const generateForensicReport = (data: {
     startY: 38,
     head: [['Field', 'Value']],
     body: [
-      ['Case ID', data.case_id],
-      ['Filename', data.filename],
-      ['SHA-256 Hash', data.hash_value],
-      ['Investigator', data.investigator],
-      ['Status', data.status],
-      ['Timestamp', data.created_at ? new Date(data.created_at).toLocaleString() : new Date().toLocaleString()],
+      ['Case ID',      sanitize(data.case_id)],
+      ['Filename',     sanitize(data.filename)],
+      ['SHA-256 Hash', sanitize(data.hash_value)],
+      ['Investigator', sanitize(data.investigator)],
+      ['Status',       sanitize(data.status)],
+      ['Timestamp',    data.created_at ? new Date(data.created_at).toLocaleString() : new Date().toLocaleString()],
     ],
     headStyles: { fillColor: [15, 23, 42], textColor: [16, 185, 129] },
     alternateRowStyles: { fillColor: [241, 245, 249] },
   });
 
-  doc.save(`forensic_report_${data.case_id}.pdf`);
+  doc.save(`forensic_report_${sanitize(data.case_id)}.pdf`);
 };
