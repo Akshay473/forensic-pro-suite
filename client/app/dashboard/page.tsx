@@ -9,6 +9,7 @@ import ForensicMap from "@/components/ForensicMap";
 import AnalysisLogs from "@/components/AnalysisLogs";
 import { supabase } from "@/lib/supabase";
 import { generateForensicReport } from "@/lib/reportGenerator";
+import { exportCasesToCSV } from "../../lib/csvExport";
 
 interface CaseRecord {
   id: string;
@@ -39,12 +40,78 @@ function buildChartData(cases: CaseRecord[]) {
     .map(([date, count]) => ({ date, count }));
 }
 
+const demoCaseRecords: CaseRecord[] = [
+  {
+    id: "demo-1042",
+    case_id: "DEMO-1042",
+    filename: "disk_image.dd",
+    hash_value: "SHA256:a81f3c72...",
+    investigator: "admin@forensics.com",
+    status: "Verified",
+    created_at: "2026-04-25T09:30:00Z",
+  },
+  {
+    id: "demo-2871",
+    case_id: "DEMO-2871",
+    filename: "network_capture.pcap",
+    hash_value: "SHA256:b72c19fe...",
+    investigator: "admin@forensics.com",
+    status: "Pending Review",
+    created_at: "2026-04-24T16:10:00Z",
+  },
+  {
+    id: "demo-3920",
+    case_id: "DEMO-3920",
+    filename: "mobile_backup.zip",
+    hash_value: "SHA256:c97d12ab...",
+    investigator: "agent@forensics.com",
+    status: "Archived",
+    created_at: "2026-04-23T11:45:00Z",
+  },
+];
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [caseHistory, setCaseHistory] = useState<CaseRecord[]>([]);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState<{ message: string; type: "success" | "error" } | null>(null);
+
+  const hasLiveRecords = caseHistory.length > 0;
+  const csvRecords = hasLiveRecords ? caseHistory : demoCaseRecords;
+  const exportMode = hasLiveRecords ? "case" : "demo";
+  const canExport = csvRecords.length > 0;
+  const csvButtonLabel = isExporting ? "Exporting..." : hasLiveRecords ? "Export CSV" : "Export Demo CSV";
+  const exportButtonDisabled = !canExport || isExporting;
+
+  useEffect(() => {
+    if (!exportStatus) return;
+    const timer = window.setTimeout(() => setExportStatus(null), 4000);
+    return () => window.clearTimeout(timer);
+  }, [exportStatus]);
+
+  const handleExportCSV = () => {
+    if (!canExport) {
+      setExportStatus({ message: "No records available to export.", type: "error" });
+      return;
+    }
+
+    setIsExporting(true);
+    try {
+      exportCasesToCSV(csvRecords, exportMode);
+      setExportStatus({
+        message: hasLiveRecords ? "CSV downloaded successfully." : "Demo CSV downloaded successfully.",
+        type: "success",
+      });
+    } catch (error) {
+      console.error("CSV export failed:", error);
+      setExportStatus({ message: "Failed to generate CSV.", type: "error" });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   const forensicTools = [
     { name: "EnCase", cat: "Disk Analysis", icon: "🔍", id: "tool-encase" },
@@ -230,9 +297,70 @@ export default function DashboardPage() {
 
           {/* Database Records */}
           <motion.section className="bg-slate-900/50 border border-slate-800 rounded-2xl p-6">
-            <h2 className="text-xs font-bold text-slate-400 font-mono uppercase tracking-widest mb-6">
-              Database Records
-            </h2>
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
+              <div className="min-w-0">
+                <h2 className="text-xs font-bold text-slate-400 font-mono uppercase tracking-widest">
+                  Database Records
+                </h2>
+                {!hasLiveRecords && (
+                  <p className="text-slate-500 text-[11px] font-mono mt-2">
+                    Live forensic data unavailable. Demo export remains ready for review.
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={handleExportCSV}
+                disabled={exportButtonDisabled}
+                className={`rounded-full border px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] flex items-center gap-2 transition-all duration-200 ${
+                  exportButtonDisabled
+                    ? "border-slate-700 bg-slate-800 text-slate-500 cursor-not-allowed shadow-none"
+                    : "border-emerald-500/30 bg-slate-900/90 text-emerald-300 shadow-sm shadow-emerald-500/10 hover:border-emerald-400 hover:bg-emerald-500/15 hover:text-emerald-100 active:scale-[0.98]"
+                }`}
+              >
+                <span className="text-[12px]">⬇️</span>
+                <span>{csvButtonLabel}</span>
+              </button>
+            </div>
+
+            <AnimatePresence>
+              {exportStatus && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  className={`mb-4 rounded-2xl border px-4 py-3 text-[11px] font-mono ${
+                    exportStatus.type === "success"
+                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"
+                      : "border-red-500/20 bg-red-500/10 text-red-200"
+                  }`}
+                  aria-live="polite"
+                >
+                  {exportStatus.message}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {!hasLiveRecords && (
+              <div className="mb-6 rounded-2xl border border-slate-800 bg-slate-900/80 p-4">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.3em] text-slate-500 font-mono mb-1">
+                      Demo forensic export
+                    </p>
+                    <p className="text-sm leading-6 text-slate-300">
+                      No live case records detected. You can still export demo forensic records for preview and audit testing.
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleExportCSV}
+                    disabled={isExporting}
+                    className="mt-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300 hover:border-emerald-400 hover:bg-emerald-500/15 hover:text-emerald-100 transition-all duration-200 shadow-sm shadow-emerald-500/10 active:scale-[0.98]"
+                  >
+                    Export Demo CSV
+                  </button>
+                </div>
+              </div>
+            )}
 
             {fetchError && (
               <p className="text-red-400 text-xs font-mono mb-4 border border-red-500/20 bg-red-500/10 rounded-lg px-3 py-2">
