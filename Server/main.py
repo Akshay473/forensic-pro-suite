@@ -26,7 +26,37 @@ ALLOWED_EXTENSIONS = {
     ".zip", ".tar", ".gz",                             # archives
 }
 
+
 MAX_FILE_SIZE = 500 * 1024 * 1024  # 500 MB
+
+@app.get("/api/stats")
+async def get_case_stats():
+    try:
+        from supabase import create_client
+        url = os.getenv("SUPABASE_URL")
+        key = os.getenv("SUPABASE_ANON_KEY")
+
+        if not url or not key:
+            raise HTTPException(status_code=500, detail="Supabase credentials not configured.")
+
+        client = create_client(url, key)
+        response = client.table("cases").select("status").execute()
+        cases = response.data
+
+        total = len(cases)
+        pending = sum(1 for c in cases if (c.get("status") or "").lower() == "pending")
+        verified = sum(1 for c in cases if (c.get("status") or "").lower() == "verified")
+
+        return {
+            "total": total,
+            "pending": pending,
+            "verified": verified,
+            "reports_generated": verified
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/analyze")
 async def run_forensic_pipeline(file: UploadFile = File(...)):

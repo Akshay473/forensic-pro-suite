@@ -118,6 +118,13 @@ export default function DashboardPage() {
 
   const chartData = buildChartData(caseHistory);
 
+  const stats = {
+  total: caseHistory.length,
+  pending: caseHistory.filter((c) => c.status?.toLowerCase() === "pending").length,
+  verified: caseHistory.filter((c) => c.status?.toLowerCase() === "verified").length,
+  reportsGenerated: caseHistory.filter((c) => c.status?.toLowerCase() === "verified").length,
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 p-6 font-sans">
       <header className="flex justify-between items-start mb-10 border-b border-slate-800 pb-6">
@@ -161,6 +168,25 @@ export default function DashboardPage() {
           </div>
         </div>
       </header>
+
+      {/* Analytics Summary Header */}
+      <motion.section
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8"
+      >
+        {[
+          { label: "Total Cases", value: stats.total, color: "text-emerald-400", border: "border-emerald-500/20" },
+          { label: "Pending", value: stats.pending, color: "text-yellow-400", border: "border-yellow-500/20" },
+          { label: "Verified", value: stats.verified, color: "text-blue-400", border: "border-blue-500/20" },
+          { label: "Reports Generated", value: stats.reportsGenerated, color: "text-purple-400", border: "border-purple-500/20" },
+        ].map((stat) => (
+          <div key={stat.label} className={`bg-slate-900 border ${stat.border} rounded-xl p-4 text-center`}>
+            <p className="text-[10px] uppercase text-slate-500 font-bold tracking-widest mb-2">{stat.label}</p>
+            <p className={`text-3xl font-mono font-bold ${stat.color}`}>{stat.value}</p>
+          </div>
+        ))}
+      </motion.section>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <div className="lg:col-span-8 space-y-8">
@@ -255,6 +281,19 @@ export default function DashboardPage() {
                       <span className="text-slate-600 font-mono text-[10px] hidden md:block">
                         {item.hash_value.slice(0, 16)}...
                       </span>
+
+                      <span
+                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full font-mono uppercase border ${
+                          item.status?.toLowerCase() === "verified"
+                            ? "text-emerald-400 bg-emerald-500/10 border-emerald-500/30"
+                            : item.status?.toLowerCase() === "pending"
+                            ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
+                            : "text-slate-400 bg-slate-700/30 border-slate-600/30"
+                        }`}
+                      >
+                        {item.status || "Unknown"}
+                      </span>
+                      
                       <button
                         onClick={() => generateForensicReport(item)}
                         className="opacity-0 group-hover:opacity-100 transition-all bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white px-3 py-1 rounded border border-emerald-500/20 text-[10px] font-bold uppercase"
