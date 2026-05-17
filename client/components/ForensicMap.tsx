@@ -21,8 +21,8 @@ const severityColor: Record<string, string> = {
 };
 
 export default function ForensicMap() {
-  const { resolvedTheme } = useTheme();
-  const isDark = resolvedTheme === "dark";
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const mapFill = isDark ? "#1e293b" : "#e2e8f0";
   const mapStroke = isDark ? "#334155" : "#cbd5e1";
   const mapHover = isDark ? "#334155" : "#cbd5e1";
@@ -60,10 +60,10 @@ export default function ForensicMap() {
                     fill={mapFill}
                     stroke={mapStroke}
                     strokeWidth={0.5}
-                    style={{
-                      default: { outline: 'none' },
-                      hover: { outline: 'none', fill: mapHover },
-                      pressed: { outline: 'none' }
+                    style={{ 
+                      default: { outline: 'none' }, 
+                      hover: { outline: 'none', fill: mapHover }, 
+                      pressed: { outline: 'none' } 
                     }}
                   />
                 ))

@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
-import { Terminal, Copy, Check, Info, Command, ChevronRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Terminal, Copy, Check, Info, ChevronRight } from "lucide-react";
 import Link from "next/link";
 
 interface CommandItem {

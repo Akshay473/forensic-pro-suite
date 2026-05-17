@@ -1,15 +1,10 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 
-interface ChatMessage {
-  role: string;
-  content: string;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { messages }: { messages: ChatMessage[] } = body;
+    const { messages } = body;
 
     const geminiKey = process.env.GEMINI_API_KEY;
     const groqKey = process.env.GROQ_API_KEY;
@@ -29,11 +24,13 @@ export async function POST(req: NextRequest) {
         const genAI = new GoogleGenerativeAI(geminiKey);
         const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
         
+        interface ChatMessage { role: string; content: string; }
         let formattedHistory = messages.slice(0, -1).map((msg: ChatMessage) => ({
           role: msg.role === "user" ? "user" : "model",
           parts: [{ text: msg.content }],
         }));
         
+        // Gemini requires the first message in history to be from 'user'
         if (formattedHistory.length > 0 && formattedHistory[0].role === "model") {
           formattedHistory = formattedHistory.slice(1);
         }
@@ -50,18 +47,19 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ response: responseText, provider: "gemini" });
       } catch (geminiError: unknown) {
-        const errorMessage = geminiError instanceof Error ? geminiError.message : String(geminiError);
-        console.warn("Gemini API failed, falling back to Groq if available:", errorMessage);
+        console.warn("Gemini API failed, falling back to Groq if available:", geminiError instanceof Error ? geminiError.message : geminiError);
+        // Fallback to Groq if available
         if (!groqKey) {
           throw geminiError;
         }
       }
     }
 
+    // Groq Fallback
     if (groqKey) {
       const groqMessages = [
         { role: "system", content: systemPrompt },
-        ...messages.map((msg: ChatMessage) => ({
+        ...messages.map((msg: { role: string; content: string }) => ({
           role: msg.role === "model" ? "assistant" : msg.role,
           content: msg.content
         }))
@@ -74,7 +72,7 @@ export async function POST(req: NextRequest) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "llama-3.1-8b-instant", // Supported Groq model
           messages: groqMessages,
           max_tokens: 1000,
         })

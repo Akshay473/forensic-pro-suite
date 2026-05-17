@@ -3,8 +3,7 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { Eye, EyeOff, Lock, User, Terminal, BookOpen, Mail, Loader2, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, Lock, User, Terminal, AlertCircle, Loader2 } from "lucide-react";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -62,12 +61,14 @@ export default function LoginPage() {
       });
 
       if (result?.ok) {
-        router.push("/dashboard"); 
+        router.push("/dashboard");
+      } else if (result?.error) {
+        setError("Invalid credentials. Please check your email and password.");
       } else {
-        setError("Invalid Credentials. Use admin@forensics.com / password123");
+        setError("Authentication service unavailable. Please try again.");
       }
-    } catch (err) {
-      setError("An unexpected error occurred. Please try again later.");
+    } catch {
+      setError("Network error. Please check your connection and try again.");
     } finally {
       setIsLoading(false);
     }
@@ -75,7 +76,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-slate-950 flex items-center justify-center p-4 transition-colors duration-300">
-      <motion.div 
+      <motion.div
         initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1 }}
         className="bg-slate-50 dark:bg-slate-900 p-8 rounded-2xl border border-slate-200 dark:border-emerald-500/30 shadow-xl w-full max-w-md"
@@ -122,6 +123,7 @@ export default function LoginPage() {
               }}
               aria-invalid={!!validationErrors.email}
               aria-describedby={validationErrors.email ? "email-error" : undefined}
+              required
             />
             {validationErrors.email && (
               <p id="email-error" className="text-xs text-red-500 mt-1">{validationErrors.email}</p>
@@ -143,6 +145,7 @@ export default function LoginPage() {
                 }}
                 aria-invalid={!!validationErrors.password}
                 aria-describedby={validationErrors.password ? "password-error" : undefined}
+                required
               />
               <button
                 type="button"
@@ -157,26 +160,22 @@ export default function LoginPage() {
               <p id="password-error" className="text-xs text-red-500 mt-1">{validationErrors.password}</p>
             )}
           </div>
-          <button 
+          <button
             type="submit"
             disabled={isLoading}
-            className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-600/50 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-900/20 uppercase text-xs tracking-widest mt-4 active:scale-[0.98] flex items-center justify-center h-12"
+            className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-900/20 uppercase text-xs tracking-widest mt-4 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex items-center justify-center gap-2 h-12"
           >
-            {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : "Access Terminal"}
+            {isLoading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                Authenticating...
+              </>
+            ) : (
+              "Access Terminal"
+            )}
           </button>
         </form>
-
-        <div className="mt-6 pt-6 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-center gap-4 text-xs text-slate-500">
-          <Link href="/docs" className="flex items-center gap-2 hover:text-emerald-500 transition-colors">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span className="font-mono uppercase tracking-widest">Documentation</span>
-          </Link>
-          <a href="mailto:akshayshibu473@gmail.com" className="flex items-center gap-2 hover:text-emerald-500 transition-colors">
-            <Mail className="w-3.5 h-3.5" />
-            <span className="font-mono uppercase tracking-widest">Contact Support</span>
-          </a>
-        </div>
       </motion.div>
     </div>
   );
-}
+}

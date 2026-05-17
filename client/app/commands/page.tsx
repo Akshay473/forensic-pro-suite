@@ -1,15 +1,13 @@
 "use client";
 import { useState } from "react";
 import { 
-  Terminal, 
   Copy, 
   Check, 
   ChevronLeft, 
   Shield, 
   Command, 
   BookOpen, 
-  Search, 
-  Zap,
+  Search,
   Activity,
   Cpu,
   Lock,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { Terminal } from "xterm";
 import { FitAddon } from "xterm-addon-fit";
 import "xterm/css/xterm.css";
@@ -110,12 +110,12 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
 
     let initTimeout: NodeJS.Timeout;
     const checkInterval = setInterval(() => {
-      if (terminalRef.current && terminalRef.current.offsetWidth > 0 && initialized.current) {
+      if (terminalRef.current && terminalRef.current.offsetWidth > 0 && initialized.current === false) {
         clearInterval(checkInterval);
-
+        
         try {
           term.open(terminalRef.current);
-
+          
           initTimeout = setTimeout(() => {
             if (termInstance.current && terminalRef.current && terminalRef.current.offsetParent) {
               try {
@@ -125,7 +125,7 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
                 termInstance.current.writeln('Type "help" to see available forensic commands.');
                 termInstance.current.write("\r\n$ ");
               } catch {
-                // Silently handle fit/focus errors
+                // Ignore fit errors
               }
             }
           }, 100);
@@ -139,9 +139,9 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
       if (!termInstance.current || !terminalRef.current || !terminalRef.current.offsetParent) return;
       try {
         fitAddon.fit();
-      } catch {
-        // Silently handle resize errors
-      }
+        } catch {
+          // Ignore dispose errors
+        }
     });
     resizeObserver.observe(terminalRef.current);
 
@@ -151,12 +151,12 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
       const char = key;
       const printable = !domEvent.altKey && !domEvent.ctrlKey && !domEvent.metaKey;
 
-      if (domEvent.keyCode === 13) {
+      if (domEvent.keyCode === 13) { // Enter
         term.write("\r\n");
         handleCommand(currentLine, term);
         currentLine = "";
         term.write("$ ");
-      } else if (domEvent.keyCode === 8) {
+      } else if (domEvent.keyCode === 8) { // Backspace
         if (currentLine.length > 0) {
           currentLine = currentLine.slice(0, -1);
           term.write("\b \b");
@@ -172,16 +172,16 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
       if (initTimeout) clearTimeout(initTimeout);
       keyDisposable.dispose();
       resizeObserver.disconnect();
-
+      
       const toDispose = termInstance.current;
       termInstance.current = null;
       initialized.current = false;
-
+      
       if (toDispose) {
         try {
           toDispose.dispose();
         } catch {
-          // Silently handle dispose errors
+          // Ignore dispose errors
         }
       }
     };
@@ -199,7 +199,7 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
   }, [isDark]);
 
   return (
-    <div
+    <div 
       className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mt-8 shadow-sm cursor-text"
       onClick={() => {
         if (termInstance.current) {
@@ -216,18 +216,22 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
         </span>
       </div>
 
-      <div
-        ref={terminalRef}
-        className="h-64 rounded-lg overflow-hidden transition-colors duration-300 bg-white dark:bg-slate-950"
+      <div 
+        ref={terminalRef} 
+        className={`h-64 rounded-lg overflow-hidden transition-colors duration-300 ${isDark ? "bg-slate-950" : "bg-white"}`} 
       />
     </div>
   );
 }
 
 export default function ForensicTerminal() {
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
-  const [mounted] = useState(() => typeof window !== "undefined");
 
   if (!mounted) {
     return <div className="h-64 mt-8 bg-slate-100 dark:bg-slate-800 rounded-2xl animate-pulse" />;

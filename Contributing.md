@@ -1,68 +1,68 @@
-# Contributing to Forensic-pro-suite
+# 🤝 Contributing to Forensic-pro-suite
 
-Your help makes this project better.
+Your help makes this project better. 💪
 
-## How Can You Contribute?
+## 🛠️ How Can You Contribute?
 
-### Reporting Bugs
+### 🐛 Reporting Bugs
 
-- Check the [issues](../../issues) to see if the bug has already been reported.
-- Open a new issue with:
-  - A clear description of the bug
-  - Steps to reproduce
-  - Expected vs actual behavior
-  - Screenshots/logs will be helpful
+- 🔍 Check the [issues](../../issues) to see if the bug has already been reported.
+- 📝 Open a new issue with:
+  - 📋 A clear description of the bug
+  - 📌 Steps to reproduce
+  - 🆚 Expected vs actual behavior
+  - 📸 Screenshots/logs will be helpful
 
-### Suggesting Features
+### 💡 Suggesting Features
 
-- Open an issue and label it as a **feature request**.
-- Clearly explain the problem the feature solves.
-- Suggest a possible implementation (if you have one).
+- 📝 Open an issue and label it as a **feature request**.
+- 🎯 Clearly explain the problem the feature solves.
+- 🏗️ Suggest a possible implementation (if you have one).
 
-## Project Setup Guide
+## 🚀 Project Setup Guide
 
-1. **Fork the repository**
+1. 🍴 **Fork the repository**
 
-2. **Create a feature branch**
+2. 🌿 **Create a feature branch**
 
    ```bash
    git checkout -b feature/your-feature-name
    ```
 
-3. **Make your changes**
-   - Follow the project's coding style.
-   - Write clear, self-explanatory commits.
+3. ✏️ **Make your changes**
+   - 📏 Follow the project's coding style.
+   - 📝 Write clear, self-explanatory commits.
 
-4. **Add tests (if applicable)**
+4. 🧪 **Add tests (if applicable)**
 
-5. **Commit your changes**
+5. ✅ **Commit your changes**
 
    ```bash
    git commit -m "Add feature: description"
    ```
 
-6. **Push to your fork**
+6. 📤 **Push to your fork**
 
    ```bash
    git push origin feature/your-feature-name
    ```
 
-7. **Open a Pull Request**
-   - Describe what you changed and why.
-   - Reference any related issues.
+7. 🔄 **Open a Pull Request**
+   - 📝 Describe what you changed and why.
+   - 🔗 Reference any related issues.
 
-## Code Style
+## 📏 Code Style
 
-- Use clear and consistent naming conventions.
-- Keep functions small and focused.
-- Write comments where needed.
+- 🏷️ Use clear and consistent naming conventions.
+- 📐 Keep functions small and focused.
+- 💬 Write comments where needed.
 
-## Pull Request Checklist
+## ✅ Pull Request Checklist
 
-- [ ] I updated relevant documentation (if needed)
-- [ ] I linked the PR to any relevant issues
+- [ ] 📖 I updated relevant documentation (if needed)
+- [ ] 🔗 I linked the PR to any relevant issues
 
-## Legal / License
+## 📜 Legal / License
 
 By contributing to this repository, you agree that your contributions will be licensed under the terms of the [Apache License 2.0](LICENSE.md).
 

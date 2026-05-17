@@ -174,7 +174,7 @@ export default function DashboardPage() {
     },
   ];
 
-  const handleToolClick = (tool: { name: string; cat: string; icon: React.ReactNode; id: string; special?: boolean }) => {
+  const handleToolClick = (tool: { name: string; cat: string; icon: React.ReactNode; id: string; special?: boolean; tasks?: string[] }) => {
     if (tool.special) {
       runAutomatedFlow();
     } else {
@@ -486,7 +486,7 @@ export default function DashboardPage() {
               </p>
             )}
 
-            <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+            <div className="space-y-4 max-h-100 overflow-y-auto pr-2">
               <AnimatePresence>
                 {(filteredCases.length > 0 ? filteredCases : searchQuery ? [] : allCases).map((item) => (
                   <motion.div
@@ -545,7 +545,7 @@ export default function DashboardPage() {
                     animate={{ opacity: 1 }}
                     className="text-center py-8 text-slate-500 text-sm font-mono"
                   >
-                    No cases found matching "{searchQuery}"
+                    No cases found matching &quot;{searchQuery}&quot;
                   </motion.div>
                 )}
               </AnimatePresence>
