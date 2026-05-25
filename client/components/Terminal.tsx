@@ -110,12 +110,12 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
 
     let initTimeout: NodeJS.Timeout;
     const checkInterval = setInterval(() => {
-      if (terminalRef.current && terminalRef.current.offsetWidth > 0 && initialized.current === false) {
+      if (terminalRef.current && terminalRef.current.offsetWidth > 0) {
         clearInterval(checkInterval);
-        
+
         try {
           term.open(terminalRef.current);
-          
+
           initTimeout = setTimeout(() => {
             if (termInstance.current && terminalRef.current && terminalRef.current.offsetParent) {
               try {
@@ -139,9 +139,9 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
       if (!termInstance.current || !terminalRef.current || !terminalRef.current.offsetParent) return;
       try {
         fitAddon.fit();
-        } catch {
-          // Ignore dispose errors
-        }
+      } catch {
+        // Ignore fit errors
+      }
     });
     resizeObserver.observe(terminalRef.current);
 
@@ -172,11 +172,11 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
       if (initTimeout) clearTimeout(initTimeout);
       keyDisposable.dispose();
       resizeObserver.disconnect();
-      
+
       const toDispose = termInstance.current;
       termInstance.current = null;
       initialized.current = false;
-      
+
       if (toDispose) {
         try {
           toDispose.dispose();
@@ -199,7 +199,7 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
   }, [isDark]);
 
   return (
-    <div 
+    <div
       className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 mt-8 shadow-sm cursor-text"
       onClick={() => {
         if (termInstance.current) {
@@ -216,9 +216,9 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
         </span>
       </div>
 
-      <div 
-        ref={terminalRef} 
-        className={`h-64 rounded-lg overflow-hidden transition-colors duration-300 ${isDark ? "bg-slate-950" : "bg-white"}`} 
+      <div
+        ref={terminalRef}
+        className={`h-64 rounded-lg overflow-hidden transition-colors duration-300 ${isDark ? "bg-slate-950" : "bg-white"}`}
       />
     </div>
   );

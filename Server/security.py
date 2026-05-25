@@ -85,7 +85,7 @@ def _validate_zip_archive(path: str) -> dict[str, int | float | str]:
         if total_uncompressed > _archive_total_limit():
             raise HTTPException(status_code=400, detail="Archive expands beyond the allowed size limit.")
 
-        compression_ratio = total_uncompressed / total_compressed
+        compression_ratio = total_uncompressed / total_compressed if total_compressed > 0 else 1.0
         if compression_ratio > _archive_ratio_limit():
             raise HTTPException(status_code=400, detail="Archive compression ratio is suspiciously high.")
 

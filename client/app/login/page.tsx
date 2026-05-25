@@ -4,19 +4,8 @@ import { signIn } from "next-auth/react";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
-<<<<<<< HEAD
-import {
-  Eye,
-  EyeOff,
-  Lock,
-  User,
-  Terminal,
-  AlertCircle,
-} from "lucide-react";
-=======
 import { Eye, EyeOff, Lock, User, Terminal, AlertCircle } from "lucide-react";
 import ThemeToggle from "@/components/ThemeToggle";
->>>>>>> 72972e1b7974a24ddc195645366d4698e962be24
 
 function validateEmail(email: string): boolean {
   const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

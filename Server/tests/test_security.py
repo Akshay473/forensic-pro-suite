@@ -79,6 +79,45 @@ class SecurityHelpersTests(unittest.TestCase):
         finally:
             Path(tmp_path).unlink(missing_ok=True)
 
+    def test_verify_file_signature_pcap_little_endian(self) -> None:
+        from engine import ForensicEngine
+        with tempfile.NamedTemporaryFile(suffix=".pcap", delete=False) as tmp:
+            tmp.write(b"\xd4\xc3\xb2\xa1somepcapdata")
+            tmp_path = tmp.name
+        try:
+            engine = ForensicEngine(tmp_path)
+            verified, sig_name = engine.verify_file_signature()
+            self.assertTrue(verified)
+            self.assertEqual(sig_name, "PCAP Network Capture (Little Endian)")
+        finally:
+            Path(tmp_path).unlink(missing_ok=True)
+
+    def test_verify_file_signature_pcap_big_endian(self) -> None:
+        from engine import ForensicEngine
+        with tempfile.NamedTemporaryFile(suffix=".pcap", delete=False) as tmp:
+            tmp.write(b"\xa1\xb2\xc3\xd4somepcapdata")
+            tmp_path = tmp.name
+        try:
+            engine = ForensicEngine(tmp_path)
+            verified, sig_name = engine.verify_file_signature()
+            self.assertTrue(verified)
+            self.assertEqual(sig_name, "PCAP Network Capture (Big Endian)")
+        finally:
+            Path(tmp_path).unlink(missing_ok=True)
+
+    def test_verify_file_signature_pcapng(self) -> None:
+        from engine import ForensicEngine
+        with tempfile.NamedTemporaryFile(suffix=".pcapng", delete=False) as tmp:
+            tmp.write(b"\x0a\x0d\x0d\x0asomepcapngdata")
+            tmp_path = tmp.name
+        try:
+            engine = ForensicEngine(tmp_path)
+            verified, sig_name = engine.verify_file_signature()
+            self.assertTrue(verified)
+            self.assertEqual(sig_name, "PCAPNG Network Capture")
+        finally:
+            Path(tmp_path).unlink(missing_ok=True)
+
 
 if __name__ == "__main__":
     unittest.main()

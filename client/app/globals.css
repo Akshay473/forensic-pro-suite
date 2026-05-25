@@ -96,3 +96,59 @@ html:not(.dark) .border {
 .dark .xterm-viewport::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
 }
+
+/* ----------------------------- */
+/* Evidence Graph / React Flow   */
+/* ----------------------------- */
+
+/* Override React Flow background & controls for dark theme */
+.react-flow__background {
+  background-color: #020617 !important;
+}
+
+.react-flow__controls {
+  background: #0f172a !important;
+  border: 1px solid #1e293b !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.react-flow__controls-button {
+  background: #0f172a !important;
+  border-bottom: 1px solid #1e293b !important;
+  color: #94a3b8 !important;
+  fill: #94a3b8 !important;
+}
+
+.react-flow__controls-button:hover {
+  background: #1e293b !important;
+}
+
+.react-flow__minimap {
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.react-flow__edge-path {
+  stroke-linecap: round;
+}
+
+.react-flow__edge-label {
+  pointer-events: none;
+}
+
+/* Node glow animations */
+@keyframes graph-node-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(16, 185, 129, 0.2); }
+  50%       { box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+}
+
+@keyframes suspicious-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);  }
+  50%       { box-shadow: 0 0 24px rgba(239, 68, 68, 0.7); }
+}
+
+.graph-node-suspicious {
+  animation: suspicious-pulse 2s ease-in-out infinite;
+}
+
