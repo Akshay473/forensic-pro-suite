@@ -20,7 +20,6 @@ import { exportCasesToCSV } from "../../lib/csvExport";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/ThemeToggle";
 import ToolModal from "@/components/ToolModal";
-import BackToTop from "@/components/BackToTop";
 import {
   Search,
   Activity,
@@ -642,7 +641,6 @@ export default function DashboardPage() {
   }, [analysisResult]);
 
   const runAutomatedFlow = () => {
-  const runAutomatedFlow = async () => {
     const input = document.createElement("input");
     input.type = "file";
     input.onchange = (e: Event) => {
@@ -703,91 +701,23 @@ export default function DashboardPage() {
                 status: "Verified",
               },
             ]);
-            if (!error) setAnalysisResult(data);
+            if (!error) {
+              setAnalysisResult(data);
+              setSelectedCaseId(data.id);
+            }
           } catch {
-            setAnalysisResult({
-              id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-              filename: file.name,
-              hash: "SHA256: 7e8a...3f12",
-              size: "N/A",
-              status: "Offline Report",
-            });
+            triggerFallback(file);
           }
         } else {
-          setAnalysisResult({
-            id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-            filename: file.name,
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/analyze`, {
-          method: "POST",
-          body: formData,
-        });
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.detail || `Server returned ${response.status}`);
+          triggerFallback(file);
         }
-
-        const data: AnalysisResult = await response.json();
-
-        // Save live response
-        setLiveAnalysisResults((prev) => ({
-          ...prev,
-          [data.id]: data,
-        }));
-
-        const { error } = await supabase.from("cases").insert([
-          {
-            case_id: data.id,
-            filename: file.name,
-            hash_value: data.hash,
-            investigator: session?.user?.email || "Unknown Agent",
-            status: "Verified",
-          },
-        ]);
-
-        if (!error) setAnalysisResult(data);
-      } catch (error: any) {
-        // Fallback to offline DEMO report only on actual network failures (e.g. Failed to fetch)
-        if (
-          error instanceof TypeError || 
-          error.name === "TypeError" || 
-          error.message?.includes("Failed to fetch") || 
-          error.message?.includes("fetch")
-        ) {
-          setAnalysisResult({
-            id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-            filename: file.name,
-            hash: "SHA256: 7e8a...3f12",
-            size: "N/A",
-            status: "Offline Report",
-          });
-        }
-        setTimeout(() => { setIsAnalyzing(false); setUploadProgress(0); }, 2000);
       };
 
       xhr.onerror = () => {
-        setAnalysisResult({
-          id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-          filename: file.name,
-          hash: "SHA256: 7e8a...3f12",
-          size: "N/A",
-          status: "Offline Report",
-        });
-        setTimeout(() => { setIsAnalyzing(false); setUploadProgress(0); }, 2000);
+        triggerFallback(file);
       };
 
-      xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/analyze`);
-      xhr.send(formData);
-        } else {
-          setFetchError(error.message || "An unexpected error occurred during analysis.");
-        }
-        if (!error) {
-          setAnalysisResult(data);
-          setSelectedCaseId(data.id);
-        }
-      } catch {
-        // Fallback demo data
+      const triggerFallback = (file: File) => {
         const demoId = `CASE-${Math.floor(Math.random() * 100000)}`;
         const fallbackData = {
           id: demoId,
@@ -818,9 +748,11 @@ export default function DashboardPage() {
 
         setCaseHistory((prev) => [newCase, ...prev]);
         setSelectedCaseId(demoId);
-      } finally {
         setTimeout(() => setIsAnalyzing(false), 1500);
-      }
+      };
+
+      xhr.open("POST", `/api/analyze`);
+      xhr.send(formData);
     };
     input.click();
   };
@@ -1563,7 +1495,7 @@ export default function DashboardPage() {
                   >
                     No cases found matching &quot;{searchQuery}&quot;
                   </motion.div>
-                ))}
+                )}
               </AnimatePresence>
             </div>
           </motion.section>

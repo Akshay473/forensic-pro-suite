@@ -1,13 +1,6 @@
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth/next";
-
-export const runtime = "nodejs";
-
-const ANALYZE_PROXY_KEY = process.env.ANALYZE_API_KEY ?? "forensic-pro-suite-demo-analyze-key";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export const runtime = "nodejs";
 
@@ -16,86 +9,11 @@ const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Missing file upload" }, { status: 400 });
-    }
-
-    const forwardForm = new FormData();
-    forwardForm.append("file", file, file.name);
-
-    const backendResponse = await fetch(`${BACKEND_URL}/api/analyze`, {
-      method: "POST",
-      headers: {
-        "X-Analyze-Key": ANALYZE_PROXY_KEY,
-      },
-      body: forwardForm,
-    });
-
-    const contentType = backendResponse.headers.get("content-type") || "application/json";
-    const payload = await backendResponse.text();
-
-    return new NextResponse(payload, {
-      status: backendResponse.status,
-      headers: {
-        "content-type": contentType,
-      },
-    });
-  } catch (error) {
-    console.error("Analyze proxy request failed:", error);
-    return NextResponse.json(
-      { error: "Unable to reach the forensic backend service." },
-      { status: 502 }
-    );
-  }
-}
-
-    return new NextResponse(payload, {
-      status: backendResponse.status,
-      headers: {
-        "content-type": contentType,
-      },
-    });
-  } catch (error) {
-    console.error("Analyze proxy request failed:", error);
-    return NextResponse.json(
-      { error: "Unable to reach the forensic backend service." },
-
-export const runtime = "nodejs";
-
-// Immutable infrastructure configurations 
-const ANALYZE_PROXY_KEY = process.env.ANALYZE_API_KEY ?? "forensic-pro-suite-demo-analyze-key";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
-export async function POST(request: NextRequest) {
-  try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Missing file upload" }, { status: 400 });
-    }
-
-    const forwardForm = new FormData();
-    forwardForm.append("file", file, file.name);
-
-    // 1. Session Guard Check - Deny unauthenticated external requests immediately
+    // 1. Session Guard Check
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
-        { error: "Unauthorized access: Valid investigator token required." }, 
+        { error: "Unauthorized access: Valid investigator token required." },
         { status: 401 }
       );
     }
@@ -106,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     if (!(uploadedFile instanceof File)) {
       return NextResponse.json(
-        { error: "Validation failure: Missing or malformed 'file' field parameters." }, 
+        { error: "Validation failure: Missing or malformed 'file' field parameters." },
         { status: 400 }
       );
     }
@@ -125,20 +43,6 @@ export async function POST(request: NextRequest) {
     });
 
     const contentType = backendResponse.headers.get("content-type") || "application/json";
-    const payload = await backendResponse.text();
-
-    return new NextResponse(payload, {
-      status: backendResponse.status,
-      headers: {
-        "content-type": contentType,
-      },
-    });
-  } catch (error) {
-    console.error("Analyze proxy request failed:", error);
-    return NextResponse.json(
-      { error: "Unable to reach the forensic backend service." },
-    // 5. Extract and parse data safely without dropping file stream contexts
-    const contentType = backendResponse.headers.get("content-type") || "application/json";
     const rawPayload = await backendResponse.text();
 
     if (!backendResponse.ok) {
@@ -151,7 +55,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 6. Return response to consumer while matching upstream binary content-types
+    // 5. Return response to consumer while matching upstream binary content-types
     return new NextResponse(rawPayload, {
       status: backendResponse.status,
       headers: { "Content-Type": contentType },
