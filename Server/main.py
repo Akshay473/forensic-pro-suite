@@ -1,4 +1,6 @@
+# pyrefly: ignore [missing-import]
 from fastapi import FastAPI, UploadFile, File, HTTPException, Depends, Header, Request
+# pyrefly: ignore [missing-import]
 from fastapi.middleware.cors import CORSMiddleware
 from security import (
     inspect_archive_limits,
@@ -41,6 +43,7 @@ ALLOWED_EXTENSIONS = {
 MAX_FILE_SIZE = 500 * 1024 * 1024
 
 
+# pyrefly: ignore [parse-error]
 def get_api_user(authorization: str | None = Header(None)):
     if not authorization:
         raise HTTPException(status_code=401, detail="Authorization header missing")
@@ -117,6 +120,7 @@ async def run_forensic_pipeline(
 
         # Record provenance to Supabase so it appears in the Evidence Graph
         try:
+            # pyrefly: ignore [missing-import]
             from supabase import create_client
             url = os.getenv("SUPABASE_URL")
             key = os.getenv("SUPABASE_ANON_KEY")
@@ -178,6 +182,7 @@ async def get_graph_relationships():
     try:
         cases = []
         try:
+            # pyrefly: ignore [missing-import]
             from supabase import create_client
             url = os.getenv("SUPABASE_URL")
             key = os.getenv("SUPABASE_ANON_KEY")
@@ -206,6 +211,7 @@ async def get_evidence_provenance(case_id: str):
     try:
         cases = []
         try:
+            # pyrefly: ignore [missing-import]
             from supabase import create_client
             url = os.getenv("SUPABASE_URL")
             key = os.getenv("SUPABASE_ANON_KEY")
@@ -259,6 +265,7 @@ async def expand_node(node_id: str):
         raise HTTPException(status_code=500, detail="Error expanding node.")
 
 
+# pyrefly: ignore [missing-import]
 from fastapi import BackgroundTasks
 import asyncio
 
@@ -278,5 +285,6 @@ async def trigger_graph_analysis(background_tasks: BackgroundTasks):
 
 
 if __name__ == "__main__":
+    # pyrefly: ignore [missing-import]
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
