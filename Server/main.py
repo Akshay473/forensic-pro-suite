@@ -19,6 +19,9 @@ import hashlib
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+from config_validator import validate_environment
+validate_environment()
+
 app = FastAPI()
 
 allowed_origin = os.getenv("ALLOWED_ORIGIN", "http://localhost:3000")
