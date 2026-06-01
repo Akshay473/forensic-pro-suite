@@ -1,0 +1,42 @@
+name: Welcome Contributor
+
+on:
+  issues:
+    types: [opened]
+  pull_request_target:
+    types: [opened]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Welcome New Contributor
+        uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            ## 🛡️ Welcome to Forensic Pro Suite!
+
+            Thank you for opening this issue! We really appreciate you taking the time to help improve this Digital Forensics Workstation. 
+
+            Please make sure you have reviewed our:
+            - [Contributing Guide](https://github.com/Akshay473/forensic-pro-suite/blob/main/Contributing.md)
+            - [Code of Conduct](https://github.com/Akshay473/forensic-pro-suite/blob/main/CODE_OF_CONDUCT.md)
+            - [Security Policy](https://github.com/Akshay473/forensic-pro-suite/blob/main/SECURITY.md)
+
+            A maintainer will review your issue shortly. In the meantime, feel free to add any extra context or logs that could help us triage!
+          pr-message: |
+            ## 🛡️ Welcome, Forensic Contributor!
+
+            Wow, thank you for submitting this pull request! Your contribution helps make **Forensic Pro Suite** more robust and feature-rich for investigators worldwide.
+
+            ### 📝 Next Steps for Review
+            1. **Verify Automated Checks**: Ensure all CI/CD checks pass.
+            2. **Read the Guidelines**: Ensure your changes adhere to our [Contributing Guide](https://github.com/Akshay473/forensic-pro-suite/blob/main/Contributing.md).
+            3. **Reviewers**: A maintainer will look over your implementation soon.
+
+            Thank you for being part of our security and forensic community! 🚀
