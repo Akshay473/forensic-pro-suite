@@ -154,6 +154,10 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
     resizeObserver.observe(terminalRef.current);
 
     let currentLine = "";
+    const commandHistory: string[] = ["help", "autopsy", "wireshark --cli", "vol.py --info", "fls", "mactime", "hash"];
+    let historyIndex = commandHistory.length;
+    const AVAILABLE_COMMANDS = ["autopsy", "wireshark", "fls", "mactime", "vol.py", "clear", "hash", "help"];
+
     const keyDisposable = term.onKey(({ key, domEvent }) => {
       if (!termInstance.current || !terminalRef.current || !terminalRef.current.offsetParent) return;
       const char = key;
@@ -161,6 +165,13 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
 
       if (domEvent.keyCode === 13) { // Enter
         term.write("\r\n");
+        const trimmed = currentLine.trim();
+        if (trimmed) {
+          if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== trimmed) {
+            commandHistory.push(trimmed);
+          }
+          historyIndex = commandHistory.length;
+        }
         handleCommand(currentLine, term);
         currentLine = "";
         term.write("$ ");
@@ -168,6 +179,45 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
         if (currentLine.length > 0) {
           currentLine = currentLine.slice(0, -1);
           term.write("\b \b");
+        }
+      } else if (domEvent.keyCode === 38) { // Up Arrow
+        if (commandHistory.length > 0 && historyIndex > 0) {
+          historyIndex--;
+          // Erase
+          for (let i = 0; i < currentLine.length; i++) {
+            term.write("\b \b");
+          }
+          currentLine = commandHistory[historyIndex];
+          term.write(currentLine);
+        }
+      } else if (domEvent.keyCode === 40) { // Down Arrow
+        if (historyIndex < commandHistory.length) {
+          historyIndex++;
+          // Erase
+          for (let i = 0; i < currentLine.length; i++) {
+            term.write("\b \b");
+          }
+          if (historyIndex === commandHistory.length) {
+            currentLine = "";
+          } else {
+            currentLine = commandHistory[historyIndex];
+            term.write(currentLine);
+          }
+        }
+      } else if (domEvent.keyCode === 9) { // Tab
+        domEvent.preventDefault();
+        const matches = AVAILABLE_COMMANDS.filter(cmd => cmd.startsWith(currentLine.toLowerCase()));
+        if (matches.length === 1) {
+          // Erase
+          for (let i = 0; i < currentLine.length; i++) {
+            term.write("\b \b");
+          }
+          currentLine = matches[0];
+          term.write(currentLine);
+        } else if (matches.length > 1) {
+          term.write("\r\n");
+          term.writeln(matches.join("  "));
+          term.write("$ " + currentLine);
         }
       } else if (printable && char.length === 1) {
         currentLine += char;
