@@ -101,27 +101,49 @@ html:not(.dark) .border {
 /* Evidence Graph / React Flow   */
 /* ----------------------------- */
 
-/* Override React Flow background & controls for dark theme */
-.react-flow__background {
+/* Override React Flow background & controls for light vs dark theme */
+.dark .react-flow__background {
   background-color: #020617 !important;
 }
 
-.react-flow__controls {
+html:not(.dark) .react-flow__background {
+  background-color: #f8fafc !important;
+}
+
+.dark .react-flow__controls {
   background: #0f172a !important;
   border: 1px solid #1e293b !important;
   border-radius: 8px !important;
   overflow: hidden;
 }
 
-.react-flow__controls-button {
+html:not(.dark) .react-flow__controls {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+}
+
+.dark .react-flow__controls-button {
   background: #0f172a !important;
   border-bottom: 1px solid #1e293b !important;
   color: #94a3b8 !important;
   fill: #94a3b8 !important;
 }
 
-.react-flow__controls-button:hover {
+html:not(.dark) .react-flow__controls-button {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  color: #64748b !important;
+  fill: #64748b !important;
+}
+
+.dark .react-flow__controls-button:hover {
   background: #1e293b !important;
+}
+
+html:not(.dark) .react-flow__controls-button:hover {
+  background: #f1f5f9 !important;
 }
 
 .react-flow__minimap {
