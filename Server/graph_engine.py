@@ -498,6 +498,9 @@ class RelationshipEngine:
                 # Only compare if they belong to different cases
                 if n1["metadata"].get("case_id") != n2["metadata"].get("case_id"):
                     f1, f2 = n1["label"], n2["label"]
+                    l1, l2 = len(f1), len(f2)
+                    if l1 + l2 > 0 and (2.0 * min(l1, l2) / (l1 + l2)) <= 0.85:
+                        continue
                     similarity = difflib.SequenceMatcher(None, f1, f2).ratio()
                     if 0.85 < similarity < 1.0:
                         patterns.append({
