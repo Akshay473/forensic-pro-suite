@@ -7,6 +7,7 @@ from security import (
     run_antivirus_scan,
     stream_upload_to_tempfile,
     validate_analyze_api_key,
+    global_rate_limiter,
 )
 from graph_engine import RelationshipEngine, DEMO_CASES
 import os
@@ -29,6 +30,39 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
+
+
+@app.middleware("http")
+async def rate_limiting_middleware(request: Request, call_next):
+    # Only rate limit API endpoints
+    if request.url.path.startswith("/api/"):
+        client_ip = request.client.host if request.client else "unknown-client"
+        x_forwarded_for = request.headers.get("x-forwarded-for")
+        if x_forwarded_for:
+            client_ip = x_forwarded_for.split(",")[0].strip()
+
+        allowed, remaining, reset_time = global_rate_limiter.is_allowed(client_ip)
+        if not allowed:
+            from fastapi.responses import JSONResponse
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Please try again later."},
+                headers={
+                    "X-RateLimit-Limit": str(global_rate_limiter.requests_limit),
+                    "X-RateLimit-Remaining": "0",
+                    "X-RateLimit-Reset": str(reset_time),
+                    "Retry-After": str(reset_time),
+                }
+            )
+
+        response = await call_next(request)
+        response.headers["X-RateLimit-Limit"] = str(global_rate_limiter.requests_limit)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(reset_time)
+        return response
+
+    return await call_next(request)
+
 
 ALLOWED_EXTENSIONS = {
     ".dd", ".img", ".e01", ".ex01", ".l01", ".s01",
