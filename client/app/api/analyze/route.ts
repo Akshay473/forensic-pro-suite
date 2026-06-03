@@ -1,101 +1,51 @@
 import { authOptions } from "@/lib/auth";
 import { getServerSession } from "next-auth/next";
 import { NextRequest, NextResponse } from "next/server";
-import { authOptions } from "@/lib/auth";
-import { getServerSession } from "next-auth/next";
 
 export const runtime = "nodejs";
 
 const ANALYZE_PROXY_KEY = process.env.ANALYZE_API_KEY ?? "forensic-pro-suite-demo-analyze-key";
 const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-export const runtime = "nodejs";
+// Resilient fetch wrapper with retry and timeout logic
+async function fetchWithRetryAndTimeout(
+  url: string,
+  options: RequestInit,
+  retries: number = 3,
+  delay: number = 1000
+): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), 90000); // 90 second timeout for large uploads
 
-const ANALYZE_PROXY_KEY = process.env.ANALYZE_API_KEY ?? "forensic-pro-suite-demo-analyze-key";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  const optionsWithTimeout = { ...options, signal: controller.signal };
 
-export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    for (let i = 0; i < retries; i++) {
+      try {
+        const response = await fetch(url, optionsWithTimeout);
+        clearTimeout(id);
+        return response;
+      } catch (err: any) {
+        if (i === retries - 1 || err.name === "AbortError") {
+          throw err;
+        }
+        // Exponential backoff delay
+        await new Promise((resolve) => setTimeout(resolve, delay * Math.pow(2, i)));
+      }
     }
-
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Missing file upload" }, { status: 400 });
-    }
-
-    const forwardForm = new FormData();
-    forwardForm.append("file", file, file.name);
-
-    const backendResponse = await fetch(`${BACKEND_URL}/api/analyze`, {
-      method: "POST",
-      headers: {
-        "X-Analyze-Key": ANALYZE_PROXY_KEY,
-      },
-      body: forwardForm,
-    });
-
-    const contentType = backendResponse.headers.get("content-type") || "application/json";
-    const payload = await backendResponse.text();
-
-    return new NextResponse(payload, {
-      status: backendResponse.status,
-      headers: {
-        "content-type": contentType,
-      },
-    });
-  } catch (error) {
-    console.error("Analyze proxy request failed:", error);
-    return NextResponse.json(
-      { error: "Unable to reach the forensic backend service." },
-      { status: 502 }
-    );
+    throw new Error("Request failed after max retries");
+  } finally {
+    clearTimeout(id);
   }
 }
 
-    return new NextResponse(payload, {
-      status: backendResponse.status,
-      headers: {
-        "content-type": contentType,
-      },
-    });
-  } catch (error) {
-    console.error("Analyze proxy request failed:", error);
-    return NextResponse.json(
-      { error: "Unable to reach the forensic backend service." },
-
-export const runtime = "nodejs";
-
-// Immutable infrastructure configurations 
-const ANALYZE_PROXY_KEY = process.env.ANALYZE_API_KEY ?? "forensic-pro-suite-demo-analyze-key";
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const formData = await request.formData();
-    const file = formData.get("file");
-
-    if (!(file instanceof File)) {
-      return NextResponse.json({ error: "Missing file upload" }, { status: 400 });
-    }
-
-    const forwardForm = new FormData();
-    forwardForm.append("file", file, file.name);
-
-    // 1. Session Guard Check - Deny unauthenticated external requests immediately
+    // 1. Session Guard Check
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json(
-        { error: "Unauthorized access: Valid investigator token required." }, 
+        { error: "Unauthorized access: Valid investigator token required." },
         { status: 401 }
       );
     }
@@ -106,7 +56,7 @@ export async function POST(request: NextRequest) {
 
     if (!(uploadedFile instanceof File)) {
       return NextResponse.json(
-        { error: "Validation failure: Missing or malformed 'file' field parameters." }, 
+        { error: "Validation failure: Missing or malformed 'file' field parameters." },
         { status: 400 }
       );
     }
@@ -116,30 +66,33 @@ export async function POST(request: NextRequest) {
     forwardForm.append("file", uploadedFile, uploadedFile.name);
 
     // 4. Dispatch proxy request downstream over secure network lanes
-    const backendResponse = await fetch(`${BACKEND_URL}/api/analyze`, {
-      method: "POST",
-      headers: {
-        "X-Analyze-Key": ANALYZE_PROXY_KEY,
+    const backendResponse = await fetchWithRetryAndTimeout(
+      `${BACKEND_URL}/api/analyze`,
+      {
+        method: "POST",
+        headers: {
+          "X-Analyze-Key": ANALYZE_PROXY_KEY,
+        },
+        body: forwardForm,
       },
-      body: forwardForm,
-    });
+      3,
+      1000
+    );
 
-    const contentType = backendResponse.headers.get("content-type") || "application/json";
-    const payload = await backendResponse.text();
-
-    return new NextResponse(payload, {
-      status: backendResponse.status,
-      headers: {
-        "content-type": contentType,
-      },
-    });
-  } catch (error) {
-    console.error("Analyze proxy request failed:", error);
-    return NextResponse.json(
-      { error: "Unable to reach the forensic backend service." },
-    // 5. Extract and parse data safely without dropping file stream contexts
     const contentType = backendResponse.headers.get("content-type") || "application/json";
     const rawPayload = await backendResponse.text();
+
+    // 5. Extract rate limiter and timeout information headers
+    const rateLimitLimit = backendResponse.headers.get("x-ratelimit-limit");
+    const rateLimitRemaining = backendResponse.headers.get("x-ratelimit-remaining");
+    const rateLimitReset = backendResponse.headers.get("x-ratelimit-reset");
+    const retryAfter = backendResponse.headers.get("retry-after");
+
+    const responseHeaders: Record<string, string> = { "Content-Type": contentType };
+    if (rateLimitLimit) responseHeaders["X-RateLimit-Limit"] = rateLimitLimit;
+    if (rateLimitRemaining) responseHeaders["X-RateLimit-Remaining"] = rateLimitRemaining;
+    if (rateLimitReset) responseHeaders["X-RateLimit-Reset"] = rateLimitReset;
+    if (retryAfter) responseHeaders["Retry-After"] = retryAfter;
 
     if (!backendResponse.ok) {
       console.error(
@@ -147,18 +100,24 @@ export async function POST(request: NextRequest) {
       );
       return NextResponse.json(
         { error: "Forensic analytics engine encountered an error while processing the artifact." },
-        { status: backendResponse.status }
+        { status: backendResponse.status, headers: responseHeaders }
       );
     }
 
-    // 6. Return response to consumer while matching upstream binary content-types
+    // 6. Return response to consumer while matching upstream binary content-types and security metadata
     return new NextResponse(rawPayload, {
       status: backendResponse.status,
-      headers: { "Content-Type": contentType },
+      headers: responseHeaders,
     });
 
-  } catch (error) {
-    // Catch-all safety net for socket hangups, infrastructure drops, or missing environment hooks
+  } catch (error: any) {
+    if (error.name === "AbortError") {
+      console.error("Forensic analysis request timed out.");
+      return NextResponse.json(
+        { error: "Timeout Exception: The downstream analysis engine took too long to respond." },
+        { status: 504 }
+      );
+    }
     console.error("Critical routing failure encountered inside Analysis Proxy API:", error);
     return NextResponse.json(
       { error: "Gateway Exception: Unable to establish connection lanes with the processing cluster." },
