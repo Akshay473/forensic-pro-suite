@@ -229,7 +229,7 @@ function InnerGraph({ data }: EvidenceGraphProps) {
 
   const [layoutStrategy, setLayoutStrategy] = useState<LayoutStrategy>("flat");
 
-  const layoutResult = useMemo(() => getLayoutedElements(data.nodes, data.edges, layoutStrategy), [data.nodes, data.edges, layoutStrategy]);
+  const layoutResult = useMemo(() => getLayoutedElements(data?.nodes || [], data?.edges || [], layoutStrategy), [data?.nodes, data?.edges, layoutStrategy]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutResult.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutResult.edges);
@@ -240,8 +240,18 @@ function InnerGraph({ data }: EvidenceGraphProps) {
   const [collapsedCases, setCollapsedCases] = useState<Set<string>>(new Set());
   const [showAlerts, setShowAlerts] = useState(true);
 
+  // Fit view on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      fitView({ padding: 0.2, duration: 200 });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [fitView]);
+
   // Re-layout when data or strategy changes
   useEffect(() => {
+    if (!data?.nodes || data.nodes.length === 0) return;
     const layout = getLayoutedElements(data.nodes, data.edges, layoutStrategy);
     setNodes(layout.nodes);
     setEdges(layout.edges);
@@ -252,6 +262,21 @@ function InnerGraph({ data }: EvidenceGraphProps) {
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
+
+  if (!data || !data.nodes || data.nodes.length === 0) {
+    return (
+      <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center transition-colors">
+        <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm shadow-md">
+          <AlertTriangle className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-slate-950 dark:text-white mb-2">No Graph Elements</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            There are no case records available to generate the relationship graph. Ingest a forensic file in the workstation to view relationships.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Compute unshared nodes per case for expand/collapse logic
   const caseToUnsharedNodes = useMemo(() => {
     const edgeMap = new Map<string, Set<string>>(); // target/source -> set of case IDs

@@ -106,6 +106,8 @@ export async function POST(request: NextRequest) {
         { status: 504 }
       );
     }
+  } catch (error) {
+    // Catch-all safety net for socket hangups or missing environment hooks
     console.error("Critical routing failure encountered inside Analysis Proxy API:", error);
     return NextResponse.json(
       { error: "Gateway Exception: Unable to establish connection lanes with the processing cluster." },

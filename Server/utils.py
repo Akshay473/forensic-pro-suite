@@ -50,3 +50,36 @@ def extract_exif_data(image_bytes: bytes) -> Dict[str, Any]:
    
     except Exception as e:
         return {"status": "error", "message": f"Failed to extract EXIF data: {str(e)}"}
+
+
+def validate_supabase_connection() -> Dict[str, Any]:
+    """
+    Validates connection parameters for Supabase and checks if the 'cases' table is queryable.
+    Returns a dictionary with status, message, and configuration details.
+    """
+    import os
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_ANON_KEY")
+    
+    if not url or not key:
+        return {
+            "status": "error",
+            "message": "Missing Supabase connection credentials in environment configuration (.env)."
+        }
+        
+    try:
+        from supabase import create_client
+        client = create_client(url, key)
+        response = client.table("cases").select("*").limit(1).execute()
+        return {
+            "status": "success",
+            "message": "Successfully connected to Supabase and verified cases table accessibility.",
+            "url": url,
+            "record_count_triage": len(response.data or [])
+        }
+    except Exception as e:
+        return {
+            "status": "error",
+            "message": f"Supabase health check connection failed: {str(e)}"
+        }
+
