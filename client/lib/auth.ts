@@ -1,5 +1,5 @@
 import CredentialsProvider from "next-auth/providers/credentials";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import type { NextAuthOptions } from "next-auth";
 
 export const authOptions: NextAuthOptions = {

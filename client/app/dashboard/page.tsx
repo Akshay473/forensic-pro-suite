@@ -20,7 +20,6 @@ import { exportCasesToCSV } from "../../lib/csvExport";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/ThemeToggle";
 import ToolModal from "@/components/ToolModal";
-import BackToTop from "@/components/BackToTop";
 import {
   Search,
   Activity,
@@ -641,6 +640,7 @@ export default function DashboardPage() {
     fetchHistory();
   }, [analysisResult]);
 
+  const runAutomatedFlow = () => {
   const runAutomatedFlow = async () => {
     const input = document.createElement("input");
     input.type = "file";
@@ -679,6 +679,46 @@ export default function DashboardPage() {
       const formData = new FormData();
       formData.append("file", file);
 
+      const xhr = new XMLHttpRequest();
+
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const pct = Math.round((event.loaded / event.total) * 100);
+          setUploadProgress(Math.min(pct, 95));
+        }
+      };
+
+      xhr.onload = async () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            const data: AnalysisResult = JSON.parse(xhr.responseText);
+            setUploadProgress(100);
+            const { error } = await supabase.from("cases").insert([
+              {
+                case_id: data.id,
+                filename: file.name,
+                hash_value: data.hash,
+                investigator: session?.user?.email || "Unknown Agent",
+                status: "Verified",
+              },
+            ]);
+            if (!error) {
+              setAnalysisResult(data);
+              setSelectedCaseId(data.id);
+            }
+          } catch {
+            triggerFallback(file);
+          }
+        } else {
+          triggerFallback(file);
+        }
+      };
+
+      xhr.onerror = () => {
+        triggerFallback(file);
+      };
+
+      const triggerFallback = (file: File) => {
       try {
         const response = await fetch("/api/analyze", {
           method: "POST",
@@ -750,7 +790,10 @@ export default function DashboardPage() {
         setFetchError("Analyzing via offline local engine (fast path).");
       } finally {
         setTimeout(() => setIsAnalyzing(false), 1500);
-      }
+      };
+
+      xhr.open("POST", `/api/analyze`);
+      xhr.send(formData);
     };
     input.click();
   };
@@ -1494,7 +1537,7 @@ export default function DashboardPage() {
                   >
                     No cases found matching &quot;{searchQuery}&quot;
                   </motion.div>
-                ))}
+                )}
               </AnimatePresence>
             </div>
           </motion.section>
