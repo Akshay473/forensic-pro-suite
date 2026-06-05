@@ -641,11 +641,10 @@ export default function DashboardPage() {
     fetchHistory();
   }, [analysisResult]);
 
-  const runAutomatedFlow = () => {
   const runAutomatedFlow = async () => {
     const input = document.createElement("input");
     input.type = "file";
-    input.onchange = (e: Event) => {
+    input.onchange = async (e: Event) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
@@ -680,57 +679,21 @@ export default function DashboardPage() {
       const formData = new FormData();
       formData.append("file", file);
 
-      const xhr = new XMLHttpRequest();
-
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const pct = Math.round((event.loaded / event.total) * 100);
-          setUploadProgress(Math.min(pct, 95));
-        }
-      };
-
-      xhr.onload = async () => {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const data: AnalysisResult = JSON.parse(xhr.responseText);
-            setUploadProgress(100);
-            const { error } = await supabase.from("cases").insert([
-              {
-                case_id: data.id,
-                filename: file.name,
-                hash_value: data.hash,
-                investigator: session?.user?.email || "Unknown Agent",
-                status: "Verified",
-              },
-            ]);
-            if (!error) setAnalysisResult(data);
-          } catch {
-            setAnalysisResult({
-              id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-              filename: file.name,
-              hash: "SHA256: 7e8a...3f12",
-              size: "N/A",
-              status: "Offline Report",
-            });
-          }
-        } else {
-          setAnalysisResult({
-            id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-            filename: file.name,
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/analyze`, {
+        const response = await fetch("/api/analyze", {
           method: "POST",
           body: formData,
         });
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.detail || `Server returned ${response.status}`);
+          throw new Error(errorData?.error || `Server returned status code: ${response.status}`);
         }
 
         const data: AnalysisResult = await response.json();
+        setUploadProgress(100);
 
-        // Save live response
+        // Save live response to states
         setLiveAnalysisResults((prev) => ({
           ...prev,
           [data.id]: data,
@@ -746,47 +709,13 @@ export default function DashboardPage() {
           },
         ]);
 
-        if (!error) setAnalysisResult(data);
-      } catch (error: any) {
-        // Fallback to offline DEMO report only on actual network failures (e.g. Failed to fetch)
-        if (
-          error instanceof TypeError || 
-          error.name === "TypeError" || 
-          error.message?.includes("Failed to fetch") || 
-          error.message?.includes("fetch")
-        ) {
-          setAnalysisResult({
-            id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-            filename: file.name,
-            hash: "SHA256: 7e8a...3f12",
-            size: "N/A",
-            status: "Offline Report",
-          });
-        }
-        setTimeout(() => { setIsAnalyzing(false); setUploadProgress(0); }, 2000);
-      };
-
-      xhr.onerror = () => {
-        setAnalysisResult({
-          id: `DEMO-${Math.floor(Math.random() * 1000)}`,
-          filename: file.name,
-          hash: "SHA256: 7e8a...3f12",
-          size: "N/A",
-          status: "Offline Report",
-        });
-        setTimeout(() => { setIsAnalyzing(false); setUploadProgress(0); }, 2000);
-      };
-
-      xhr.open("POST", `${process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000"}/api/analyze`);
-      xhr.send(formData);
-        } else {
-          setFetchError(error.message || "An unexpected error occurred during analysis.");
-        }
         if (!error) {
           setAnalysisResult(data);
           setSelectedCaseId(data.id);
         }
-      } catch {
+      } catch (error: any) {
+        console.warn("Live analysis failed or offline - falling back to local simulation:", error);
+        
         // Fallback demo data
         const demoId = `CASE-${Math.floor(Math.random() * 100000)}`;
         const fallbackData = {
@@ -818,12 +747,14 @@ export default function DashboardPage() {
 
         setCaseHistory((prev) => [newCase, ...prev]);
         setSelectedCaseId(demoId);
+        setFetchError("Analyzing via offline local engine (fast path).");
       } finally {
         setTimeout(() => setIsAnalyzing(false), 1500);
       }
     };
     input.click();
   };
+
 
   const chartData = buildChartData(allCases);
 

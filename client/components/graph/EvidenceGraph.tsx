@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   ReactFlow,
   Background,
@@ -223,10 +224,12 @@ function getLayoutedElements(rawNodes: RawNode[], rawEdges: RawEdge[], strategy:
 
 function InnerGraph({ data }: EvidenceGraphProps) {
   const { fitView, setCenter } = useReactFlow();
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
 
   const [layoutStrategy, setLayoutStrategy] = useState<LayoutStrategy>("flat");
 
-  const layoutResult = useMemo(() => getLayoutedElements(data.nodes, data.edges, layoutStrategy), [data.nodes, data.edges, layoutStrategy]);
+  const layoutResult = useMemo(() => getLayoutedElements(data?.nodes || [], data?.edges || [], layoutStrategy), [data?.nodes, data?.edges, layoutStrategy]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState(layoutResult.nodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(layoutResult.edges);
@@ -237,8 +240,18 @@ function InnerGraph({ data }: EvidenceGraphProps) {
   const [collapsedCases, setCollapsedCases] = useState<Set<string>>(new Set());
   const [showAlerts, setShowAlerts] = useState(true);
 
+  // Fit view on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      fitView({ padding: 0.2, duration: 200 });
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [fitView]);
+
   // Re-layout when data or strategy changes
   useEffect(() => {
+    if (!data?.nodes || data.nodes.length === 0) return;
     const layout = getLayoutedElements(data.nodes, data.edges, layoutStrategy);
     setNodes(layout.nodes);
     setEdges(layout.edges);
@@ -249,6 +262,21 @@ function InnerGraph({ data }: EvidenceGraphProps) {
     (params: Connection) => setEdges((eds) => addEdge(params, eds)),
     [setEdges]
   );
+
+  if (!data || !data.nodes || data.nodes.length === 0) {
+    return (
+      <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center transition-colors">
+        <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm shadow-md">
+          <AlertTriangle className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-slate-950 dark:text-white mb-2">No Graph Elements</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            There are no case records available to generate the relationship graph. Ingest a forensic file in the workstation to view relationships.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   // Compute unshared nodes per case for expand/collapse logic
   const caseToUnsharedNodes = useMemo(() => {
     const edgeMap = new Map<string, Set<string>>(); // target/source -> set of case IDs
@@ -378,7 +406,7 @@ function InnerGraph({ data }: EvidenceGraphProps) {
   };
 
   return (
-    <div className="absolute inset-0 bg-slate-950">
+    <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
       {/* Toolbar */}
       <div className="absolute top-4 left-4 right-4 z-10 flex flex-wrap items-center gap-2 pointer-events-none">
         {/* Search */}
@@ -390,38 +418,38 @@ function InnerGraph({ data }: EvidenceGraphProps) {
             placeholder="Search nodes..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-slate-900/90 backdrop-blur border border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-[11px] font-mono text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 w-44 transition-all"
+            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-1.5 text-[11px] font-mono text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-emerald-500/50 w-44 transition-all"
           />
           {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white">
+            <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-700 dark:hover:text-white">
               <X className="w-3 h-3" />
             </button>
           )}
         </div>
 
         {/* Layout Strategy Select */}
-        <div className="pointer-events-auto flex items-center gap-2 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-lg px-2 py-1">
-          <span className="text-[10px] font-mono text-slate-400 pl-1">Layout:</span>
+        <div className="pointer-events-auto flex items-center gap-2 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 transition-colors">
+          <span className="text-[10px] font-mono text-slate-500 dark:text-slate-400 pl-1">Layout:</span>
           <select
             value={layoutStrategy}
             onChange={(e) => setLayoutStrategy(e.target.value as LayoutStrategy)}
-            className="bg-transparent border-none outline-none text-[10px] font-mono font-bold text-slate-300 uppercase tracking-wide cursor-pointer focus:ring-0"
+            className="bg-transparent border-none outline-none text-[10px] font-mono font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wide cursor-pointer focus:ring-0"
           >
-            <option value="flat" className="bg-slate-900 text-slate-300">Flat</option>
-            <option value="type" className="bg-slate-900 text-slate-300">Group by Type</option>
-            <option value="case" className="bg-slate-900 text-slate-300">Group by Case</option>
+            <option value="flat" className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300">Flat</option>
+            <option value="type" className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300">Group by Type</option>
+            <option value="case" className="bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300">Group by Case</option>
           </select>
         </div>
 
         {/* Type filters */}
-        <div className="pointer-events-auto flex items-center gap-1 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-lg px-2 py-1">
+        <div className="pointer-events-auto flex items-center gap-1 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 transition-colors">
           <Filter className="w-3 h-3 text-slate-500 mr-1" />
           {NODE_FILTER_OPTIONS.map((opt) => (
             <button
               key={opt.type}
               onClick={() => toggleFilter(opt.type)}
               style={activeFilters.has(opt.type) ? { backgroundColor: opt.color + "30", borderColor: opt.color } : {}}
-              className="text-[9px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-transparent hover:border-slate-600 text-slate-400 hover:text-white transition-all"
+              className="text-[9px] font-mono font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-transparent hover:border-slate-300 dark:hover:border-slate-600 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all"
             >
               {opt.label}
             </button>
@@ -429,17 +457,17 @@ function InnerGraph({ data }: EvidenceGraphProps) {
         </div>
 
         {/* Stats */}
-        <div className="pointer-events-auto ml-auto flex items-center gap-3 bg-slate-900/90 backdrop-blur border border-slate-700 rounded-lg px-3 py-1.5">
-          <span className="text-[9px] font-mono text-slate-400">
-            <span className="text-emerald-400 font-bold">{data.stats.total_nodes}</span> nodes
+        <div className="pointer-events-auto ml-auto flex items-center gap-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-1.5 transition-colors">
+          <span className="text-[9px] font-mono text-slate-600 dark:text-slate-400">
+            <span className="text-emerald-500 dark:text-emerald-400 font-bold">{data.stats.total_nodes}</span> nodes
           </span>
-          <span className="text-[9px] font-mono text-slate-400">
-            <span className="text-blue-400 font-bold">{data.stats.total_edges}</span> edges
+          <span className="text-[9px] font-mono text-slate-600 dark:text-slate-400">
+            <span className="text-blue-500 dark:text-blue-400 font-bold">{data.stats.total_edges}</span> edges
           </span>
           {data.stats.suspicious_count > 0 && (
             <button
               onClick={() => setShowAlerts((v) => !v)}
-              className="flex items-center gap-1 text-[9px] font-mono text-red-400 font-bold animate-pulse"
+              className="flex items-center gap-1 text-[9px] font-mono text-red-500 dark:text-red-400 font-bold animate-pulse"
             >
               <AlertTriangle className="w-3 h-3" />
               {data.stats.suspicious_count} alerts
@@ -455,33 +483,33 @@ function InnerGraph({ data }: EvidenceGraphProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="absolute bottom-20 left-4 z-10 w-72 bg-slate-900/95 backdrop-blur border border-red-500/30 rounded-xl shadow-xl overflow-hidden"
+            className="absolute bottom-20 left-4 z-10 w-72 bg-white/95 dark:bg-slate-900/95 backdrop-blur border border-red-500/20 dark:border-red-500/30 rounded-xl shadow-xl overflow-hidden transition-colors"
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-red-500/20">
               <div className="flex items-center gap-2">
-                <AlertTriangle className="w-3.5 h-3.5 text-red-400" />
-                <span className="text-[10px] font-mono font-bold text-red-400 uppercase tracking-widest">
+                <AlertTriangle className="w-3.5 h-3.5 text-red-500 dark:text-red-400" />
+                <span className="text-[10px] font-mono font-bold text-red-500 dark:text-red-400 uppercase tracking-widest">
                   Suspicious Patterns
                 </span>
               </div>
-              <button onClick={() => setShowAlerts(false)} className="text-slate-500 hover:text-white transition-colors">
+              <button onClick={() => setShowAlerts(false)} className="text-slate-500 hover:text-slate-700 dark:hover:text-white transition-colors">
                 <X className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="max-h-40 overflow-y-auto divide-y divide-slate-800">
+            <div className="max-h-40 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
               {data.suspicious_patterns.map((p) => (
                 <div key={p.id} className="px-3 py-2">
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className={`text-[8px] font-bold uppercase px-1.5 py-0.5 rounded-full border font-mono ${
-                      p.severity === "high" ? "text-red-400 bg-red-500/10 border-red-500/30"
-                        : p.severity === "medium" ? "text-yellow-400 bg-yellow-500/10 border-yellow-500/30"
-                        : "text-slate-400 bg-slate-500/10 border-slate-500/30"
+                      p.severity === "high" ? "text-red-500 bg-red-500/10 border-red-500/30 dark:text-red-400"
+                        : p.severity === "medium" ? "text-yellow-600 bg-yellow-500/10 border-yellow-500/30 dark:text-yellow-400"
+                        : "text-slate-500 bg-slate-500/10 border-slate-500/30 dark:text-slate-400"
                     }`}>
                       {p.severity}
                     </span>
-                    <span className="text-[9px] font-mono text-slate-400">{p.type.replace(/_/g, " ")}</span>
+                    <span className="text-[9px] font-mono text-slate-500 dark:text-slate-400">{p.type.replace(/_/g, " ")}</span>
                   </div>
-                  <p className="text-[10px] text-slate-300 leading-relaxed">{p.description}</p>
+                  <p className="text-[10px] text-slate-700 dark:text-slate-300 leading-relaxed">{p.description}</p>
                 </div>
               ))}
             </div>
@@ -501,17 +529,17 @@ function InnerGraph({ data }: EvidenceGraphProps) {
         onNodeDoubleClick={onNodeDoubleClick}
         fitView
         fitViewOptions={{ padding: 0.2 }}
-        className="bg-slate-950"
-        colorMode="dark"
+        className="bg-slate-50 dark:bg-slate-950 transition-colors"
+        colorMode={isDark ? "dark" : "light"}
       >
-        <Background color="#1e293b" gap={24} size={1} />
+        <Background color={isDark ? "#334155" : "#cbd5e1"} gap={24} size={1} />
         <Controls
           position="bottom-right"
-          className="!bg-slate-900 !border-slate-700 [&>button]:!bg-slate-900 [&>button]:!border-slate-700 [&>button]:!text-slate-400"
+          className="!bg-white dark:!bg-slate-900 !border-slate-200 dark:!border-slate-700 [&>button]:!bg-white dark:[&>button]:!bg-slate-900 [&>button]:!border-slate-200 dark:[&>button]:!border-slate-700 [&>button]:!text-slate-600 dark:[&>button]:!text-slate-400 [&>svg]:!fill-current"
         />
         <MiniMap
           position="bottom-left"
-          style={{ background: "#0f172a", border: "1px solid #1e293b" }}
+          style={{ background: isDark ? "#0f172a" : "#ffffff", border: isDark ? "1px solid #1e293b" : "1px solid #e2e8f0" }}
           nodeColor={(n) => {
             const colorMap: Record<string, string> = {
               case: "#10b981", evidence: "#3b82f6", hash: "#a855f7",
@@ -519,7 +547,7 @@ function InnerGraph({ data }: EvidenceGraphProps) {
             };
             return colorMap[n.type as string] || "#475569";
           }}
-          maskColor="rgba(0,0,0,0.5)"
+          maskColor={isDark ? "rgba(0,0,0,0.5)" : "rgba(255,255,255,0.5)"}
         />
       </ReactFlow>
 

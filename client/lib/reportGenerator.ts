@@ -119,6 +119,8 @@ export const generateForensicReport = async (
   doc.setFont('helvetica', 'bold');
   doc.text('CHAIN-OF-CUSTODY EVIDENCE REPORT', 15, 50);
 
+  let startTableY = 55;
+
   // AI Case Summary Section
   if (aiSummary) {
     doc.setFontSize(12);
@@ -151,6 +153,12 @@ export const generateForensicReport = async (
       doc.setTextColor(0, 0, 0);
       aiSummary.keyFindings.slice(0, 5).forEach((finding) => {
         const findingLines = doc.splitTextToSize(`• ${finding}`, pageWidth - 30);
+        if (currentY + findingLines.length * 3 > pageHeight - 30) {
+          doc.addPage();
+          addHeader(doc);
+          addWatermark(doc);
+          currentY = 45;
+        }
         doc.text(findingLines, 15, currentY);
         currentY += findingLines.length * 3 + 1;
       });
@@ -159,6 +167,12 @@ export const generateForensicReport = async (
 
     // Risk Assessment
     if (aiSummary.riskAssessment) {
+      if (currentY + 15 > pageHeight - 30) {
+        doc.addPage();
+        addHeader(doc);
+        addWatermark(doc);
+        currentY = 45;
+      }
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(30, 41, 59);
@@ -174,13 +188,17 @@ export const generateForensicReport = async (
     // Add page break if content is getting long
     if (currentY > pageHeight - 60) {
       doc.addPage();
-      currentY = 20;
+      addHeader(doc);
+      addWatermark(doc);
+      currentY = 45;
     }
+    
+    startTableY = currentY + 5;
   }
 
   // 1. Evidence Metadata Table
   autoTable(doc, {
-    startY: 55,
+    startY: startTableY,
     margin: { left: 15, right: 15 },
     head: [['Evidence Specification', 'Value']],
     body: [
