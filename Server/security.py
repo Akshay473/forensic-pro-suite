@@ -51,9 +51,10 @@ def validate_analyze_api_key(provided_key: str | None) -> None:
 async def stream_upload_to_tempfile(upload_file: UploadFile, suffix: str) -> tuple[str, int]:
     total_bytes = 0
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp_path = tmp.name
-        try:
+    import tempfile
+    fd, tmp_path = tempfile.mkstemp(suffix=suffix)
+    try:
+        with os.fdopen(fd, "wb") as tmp:
             while True:
                 chunk = await upload_file.read(UPLOAD_CHUNK_SIZE)
                 if not chunk:
@@ -64,12 +65,16 @@ async def stream_upload_to_tempfile(upload_file: UploadFile, suffix: str) -> tup
                     raise HTTPException(status_code=413, detail="File exceeds the maximum allowed size.")
 
                 tmp.write(chunk)
-
             tmp.flush()
-            return tmp_path, total_bytes
-        except Exception:
-            Path(tmp_path).unlink(missing_ok=True)
-            raise
+        return tmp_path, total_bytes
+    except Exception:
+        if os.path.exists(tmp_path):
+            try:
+                os.unlink(tmp_path)
+            except OSError:
+                pass
+        raise
+
 
 
 def _validate_zip_archive(path: str) -> dict[str, int | float | str]:
@@ -189,6 +194,13 @@ def run_antivirus_scan(path: str) -> dict[str, str]:
         )
     except subprocess.TimeoutExpired as exc:
         raise HTTPException(status_code=504, detail="Antivirus scan timed out.") from exc
+    except OSError as exc:
+        if _truthy(os.getenv("REQUIRE_ANTIVIRUS_SCAN")):
+            raise HTTPException(
+                status_code=503,
+                detail=f"Antivirus scanner failed to execute: {str(exc)}"
+            ) from exc
+        return {"engine": "unavailable", "status": "skipped", "output": f"Antivirus scanner execution failed: {str(exc)}"}
 
     output = "\n".join(part for part in [completed.stdout.strip(), completed.stderr.strip()] if part)
     if completed.returncode == 0:
@@ -198,6 +210,7 @@ def run_antivirus_scan(path: str) -> dict[str, str]:
         raise HTTPException(status_code=400, detail="File failed malware scan.")
 
     raise HTTPException(status_code=503, detail=f"Antivirus scan failed: {output or 'unknown error'}")
+
 
 
 def run_analysis_in_worker(path: str) -> dict:
@@ -225,3 +238,44 @@ def run_analysis_in_worker(path: str) -> dict:
 
 def remove_file(path: str) -> None:
     Path(path).unlink(missing_ok=True)
+
+
+import collections
+import time
+
+class RateLimiter:
+    def __init__(self, requests_limit: int = 10, window_seconds: int = 60):
+        self.requests_limit = requests_limit
+        self.window_seconds = window_seconds
+        # maps client identifier (e.g. IP) to list of request timestamps
+        self.requests = collections.defaultdict(list)
+
+    def is_allowed(self, client_id: str) -> tuple[bool, int, int]:
+        """
+        Checks if client request is within rate limits.
+        Returns:
+            (is_allowed, remaining_requests, reset_seconds)
+        """
+        now = time.time()
+        client_history = self.requests[client_id]
+        
+        # remove timestamps older than sliding window
+        while client_history and client_history[0] < now - self.window_seconds:
+            client_history.pop(0)
+            
+        remaining = self.requests_limit - len(client_history)
+        
+        if remaining > 0:
+            client_history.append(now)
+            remaining -= 1
+            reset_time = int(self.window_seconds - (now - client_history[0])) if client_history else self.window_seconds
+            return True, remaining, max(0, reset_time)
+        else:
+            reset_time = int(self.window_seconds - (now - client_history[0]))
+            return False, 0, max(0, reset_time)
+
+# Global rate limiter instance
+LIMITER_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "30"))
+LIMITER_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
+global_rate_limiter = RateLimiter(LIMITER_REQUESTS, LIMITER_WINDOW)
+
