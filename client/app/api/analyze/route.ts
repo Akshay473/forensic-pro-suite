@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
     forwardForm.append("file", uploadedFile, uploadedFile.name);
 
     // 4. Dispatch proxy request downstream over secure network lanes
+    // 4. Dispatch proxy request downstream over secure network lanes with retries/timeouts
     const backendResponse = await fetchWithRetryAndTimeout(
       `${BACKEND_URL}/api/analyze`,
       {
@@ -105,6 +106,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 6. Return response to consumer while matching upstream binary content-types and security metadata
+    // 5. Return response to consumer while matching upstream binary content-types
     return new NextResponse(rawPayload, {
       status: backendResponse.status,
       headers: responseHeaders,
@@ -118,6 +120,8 @@ export async function POST(request: NextRequest) {
         { status: 504 }
       );
     }
+  } catch (error) {
+    // Catch-all safety net for socket hangups or missing environment hooks
     console.error("Critical routing failure encountered inside Analysis Proxy API:", error);
     return NextResponse.json(
       { error: "Gateway Exception: Unable to establish connection lanes with the processing cluster." },
