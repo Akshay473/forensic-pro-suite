@@ -189,6 +189,13 @@ def run_antivirus_scan(path: str) -> dict[str, str]:
         )
     except subprocess.TimeoutExpired as exc:
         raise HTTPException(status_code=504, detail="Antivirus scan timed out.") from exc
+    except OSError as exc:
+        if _truthy(os.getenv("REQUIRE_ANTIVIRUS_SCAN")):
+            raise HTTPException(
+                status_code=503,
+                detail=f"Antivirus scanner failed to execute: {str(exc)}"
+            ) from exc
+        return {"engine": "unavailable", "status": "skipped", "output": f"Antivirus scanner execution failed: {str(exc)}"}
 
     output = "\n".join(part for part in [completed.stdout.strip(), completed.stderr.strip()] if part)
     if completed.returncode == 0:
@@ -198,6 +205,7 @@ def run_antivirus_scan(path: str) -> dict[str, str]:
         raise HTTPException(status_code=400, detail="File failed malware scan.")
 
     raise HTTPException(status_code=503, detail=f"Antivirus scan failed: {output or 'unknown error'}")
+
 
 
 def run_analysis_in_worker(path: str) -> dict:
