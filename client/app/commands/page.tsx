@@ -150,6 +150,7 @@ export default function CommandReference() {
           <input 
             type="text"
             placeholder="Search commands or descriptions..."
+            aria-label="Search forensic commands or descriptions"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all font-mono text-sm"
@@ -203,7 +204,8 @@ export default function CommandReference() {
 
                 <button
                   onClick={() => copyToClipboard(item.cmd)}
-                  className="shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-500/20"
+                  aria-label={`Copy syntax for ${item.cmd}`}
+                  className="shrink-0 flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-600 focus:ring-2 focus:ring-emerald-500/50 text-white text-xs font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-emerald-500/20 focus:outline-none"
                 >
                   {copiedCmd === item.cmd ? (
                     <>
