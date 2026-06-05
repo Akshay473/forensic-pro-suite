@@ -189,3 +189,20 @@ Password: password123
 4. **Examination:** Case records persisted to Supabase with investigator attribution.
 5. **Analysis:** Threat nodes visualized on the geospatial map.
 6. **Reporting:** Per-case PDF chain-of-custody report generated client-side.
+
+---
+
+## 🏛️ System Architecture & Security Boundaries
+
+### 📡 Data Ingestion Pipeline (Data Flow)
+The workstation consists of two core components executing file integrity parsing, antivirus scanning, static heuristics, and isolated subprocess calculations:
+1. **Frontend Proxy Layer (`Next.js`)**: Validates active NextAuth sessions, manages investigator token assignments, and proxies file streams to downstream backend lanes.
+2. **Analysis Backend (`FastAPI`)**: Validates client rate limits, matches magic signature headers, and executes sandbox subprocesses for malware detection and metadata parsing.
+
+### 🛡️ Threat Heuristics & Protection Layers
+To protect the investigator workstation from hostile payloads (e.g., zip-bombs, file extension spoofing, automated API scraping), the system implements four layers of validation:
+- **Magic Signatures (Spoof Detection)**: Reads the initial file header bytes (e.g. `%PDF` for PDF, `0x89 0x50` for PNG) and compares them with the user-provided file extension to identify disguised executables.
+- **Decompression limits (Zip-Bomb Protection)**: Restricts archive expansion thresholds (maximum 2 GB decompressed bytes, 10,000 files count, and 100x max compression ratio).
+- **Subprocess Antivirus Isolation**: Integrates local `clamscan` engines to quarantine malicious uploads before database ingestion.
+- **Sliding-Window Rate Limiter**: Enforces a global IP limit (default `30 requests per minute`) to secure processing threads from automation loops.
+
