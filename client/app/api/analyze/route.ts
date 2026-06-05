@@ -65,6 +65,7 @@ export async function POST(request: NextRequest) {
     const forwardForm = new FormData();
     forwardForm.append("file", uploadedFile, uploadedFile.name);
 
+    // 4. Dispatch proxy request downstream over secure network lanes
     // 4. Dispatch proxy request downstream over secure network lanes with retries/timeouts
     const backendResponse = await fetchWithRetryAndTimeout(
       `${BACKEND_URL}/api/analyze`,
@@ -82,20 +83,33 @@ export async function POST(request: NextRequest) {
     const contentType = backendResponse.headers.get("content-type") || "application/json";
     const rawPayload = await backendResponse.text();
 
+    // 5. Extract rate limiter and timeout information headers
+    const rateLimitLimit = backendResponse.headers.get("x-ratelimit-limit");
+    const rateLimitRemaining = backendResponse.headers.get("x-ratelimit-remaining");
+    const rateLimitReset = backendResponse.headers.get("x-ratelimit-reset");
+    const retryAfter = backendResponse.headers.get("retry-after");
+
+    const responseHeaders: Record<string, string> = { "Content-Type": contentType };
+    if (rateLimitLimit) responseHeaders["X-RateLimit-Limit"] = rateLimitLimit;
+    if (rateLimitRemaining) responseHeaders["X-RateLimit-Remaining"] = rateLimitRemaining;
+    if (rateLimitReset) responseHeaders["X-RateLimit-Reset"] = rateLimitReset;
+    if (retryAfter) responseHeaders["Retry-After"] = retryAfter;
+
     if (!backendResponse.ok) {
       console.error(
         `Forensic downstream service failed. Status: ${backendResponse.status}. Body: ${rawPayload.slice(0, 500)}`
       );
       return NextResponse.json(
         { error: "Forensic analytics engine encountered an error while processing the artifact." },
-        { status: backendResponse.status }
+        { status: backendResponse.status, headers: responseHeaders }
       );
     }
 
+    // 6. Return response to consumer while matching upstream binary content-types and security metadata
     // 5. Return response to consumer while matching upstream binary content-types
     return new NextResponse(rawPayload, {
       status: backendResponse.status,
-      headers: { "Content-Type": contentType },
+      headers: responseHeaders,
     });
 
   } catch (error: any) {
