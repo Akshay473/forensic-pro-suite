@@ -83,3 +83,25 @@ def validate_supabase_connection() -> Dict[str, Any]:
             "message": f"Supabase health check connection failed: {str(e)}"
         }
 
+
+
+def detect_file_signature(file_bytes: bytes) -> str:
+    """
+    Reads the leading magic bytes of a file buffer and returns a standard MIME/file type classification.
+    """
+    if len(file_bytes) < 4:
+        return "UNKNOWN/TOO_SHORT"
+    header = file_bytes[:4]
+    if header.startswith(b"\xff\xd8\xff"):
+        return "image/jpeg"
+    elif header.startswith(b"\x89PNG"):
+        return "image/png"
+    elif header.startswith(b"PK\x03\x04"):
+        return "application/zip"
+    elif header.startswith(b"\x7fELF"):
+        return "application/x-elf"
+    elif header.startswith(b"MZ"):
+        return "application/x-msdownload"
+    elif header.startswith(b"\xd4\xc3\xb2\xa1") or header.startswith(b"\xa1\xb2\xc3\xd4"):
+        return "application/vnd.tcpdump.pcap"
+    return "application/octet-stream"
