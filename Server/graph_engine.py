@@ -106,8 +106,15 @@ def _derive_device(case: dict) -> str:
 
 
 def _clean_hash(hash_value: str) -> str:
-    """Strip SHA256:/MD5: prefixes."""
-    return re.sub(r"^(SHA256:|MD5:)\s*", "", hash_value or "").strip()
+    """Strip SHA256:/MD5: prefixes without regular expressions to avoid ReDoS."""
+    if not hash_value:
+        return ""
+    val = hash_value.strip()
+    if val.upper().startswith("SHA256:"):
+        val = val[7:]
+    elif val.upper().startswith("MD5:"):
+        val = val[4:]
+    return val.strip()
 
 
 # ---------------------------------------------------------------------------
