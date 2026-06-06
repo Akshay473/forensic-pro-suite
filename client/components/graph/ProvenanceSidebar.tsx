@@ -131,12 +131,6 @@ export default function ProvenanceSidebar({
   onFocusNode,
   relatedNodes,
 }: ProvenanceSidebarProps) {
-  if (!node) return null;
-
-  const nodePatterns = patterns.filter((p) => p.nodes.includes(node.id));
-  const colorClass = COLOR_MAP[node.type] || COLOR_MAP.case;
-  const icon = ICON_MAP[node.type] || <FileText className="w-4 h-4" />;
-
   const [provenanceChain, setProvenanceChain] = React.useState<ProvenanceStep[]>([]);
   const [loading, setLoading] = React.useState(false);
 
@@ -176,26 +170,34 @@ export default function ProvenanceSidebar({
     const caseId = caseIdRaw ? String(caseIdRaw).replace("case-", "") : null;
 
     if (!caseId) {
-      setProvenanceChain(fallbackChain);
+      setTimeout(() => setProvenanceChain(fallbackChain), 0);
       return;
     }
 
-    setLoading(true);
-    fetch(`/api/graph/provenance/${caseId}`)
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.chain) {
-          setProvenanceChain(data.chain);
-        } else {
+    setTimeout(() => {
+      setLoading(true);
+      fetch(`/api/graph/provenance/${caseId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.chain) {
+            setProvenanceChain(data.chain);
+          } else {
+            setProvenanceChain(fallbackChain);
+          }
+        })
+        .catch(err => {
+          console.error("Failed to fetch provenance", err);
           setProvenanceChain(fallbackChain);
-        }
-      })
-      .catch(err => {
-        console.error("Failed to fetch provenance", err);
-        setProvenanceChain(fallbackChain);
-      })
-      .finally(() => setLoading(false));
+        })
+        .finally(() => setLoading(false));
+    }, 0);
   }, [node, patterns, relatedNodes.length]);
+
+  if (!node) return null;
+
+  const nodePatterns = patterns.filter((p) => p.nodes.includes(node.id));
+  const colorClass = COLOR_MAP[node.type] || COLOR_MAP.case;
+  const icon = ICON_MAP[node.type] || <FileText className="w-4 h-4" />;
 
   return (
     <AnimatePresence>
