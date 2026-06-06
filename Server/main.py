@@ -180,6 +180,8 @@ async def run_forensic_pipeline(
         except Exception as e:
             logger.warning(f"Failed to record upload provenance to Supabase: {e}")
 
+        write_audit(f"user={current_user['id']} action=analyze file={file.filename} hash={report['hash_sha256']}")
+
         return {
             "id": case_id,
             "filename": file.filename,
