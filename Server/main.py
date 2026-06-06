@@ -23,7 +23,15 @@ logger = logging.getLogger(__name__)
 from config_validator import validate_environment
 validate_environment()
 
-app = FastAPI()
+app = FastAPI(
+    title="Forensic Pro Suite API",
+    description="Advanced backend api for analyzing evidence archives, inspecting file signatures, running antivirus scans, and mapping relationships.",
+    version="1.0.0",
+    contact={
+        "name": "Forensic Pro Suite Security Team",
+        "url": "https://github.com/KGFCH2/forensic-pro-suite",
+    }
+)
 
 allowed_origin = os.getenv("ALLOWED_ORIGIN", "http://localhost:3000")
 
