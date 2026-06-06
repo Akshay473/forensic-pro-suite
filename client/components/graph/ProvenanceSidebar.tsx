@@ -131,12 +131,6 @@ export default function ProvenanceSidebar({
   onFocusNode,
   relatedNodes,
 }: ProvenanceSidebarProps) {
-  if (!node) return null;
-
-  const nodePatterns = patterns.filter((p) => p.nodes.includes(node.id));
-  const colorClass = COLOR_MAP[node.type] || COLOR_MAP.case;
-  const icon = ICON_MAP[node.type] || <FileText className="w-4 h-4" />;
-
   const [provenanceChain, setProvenanceChain] = React.useState<ProvenanceStep[]>([]);
   const [loading, setLoading] = React.useState(false);
 
@@ -196,6 +190,12 @@ export default function ProvenanceSidebar({
       })
       .finally(() => setLoading(false));
   }, [node, patterns, relatedNodes.length]);
+
+  if (!node) return null;
+
+  const nodePatterns = patterns.filter((p) => p.nodes.includes(node.id));
+  const colorClass = COLOR_MAP[node.type] || COLOR_MAP.case;
+  const icon = ICON_MAP[node.type] || <FileText className="w-4 h-4" />;
 
   return (
     <AnimatePresence>

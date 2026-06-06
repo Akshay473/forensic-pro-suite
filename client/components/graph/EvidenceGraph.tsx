@@ -263,24 +263,11 @@ function InnerGraph({ data }: EvidenceGraphProps) {
     [setEdges]
   );
 
-  if (!data || !data.nodes || data.nodes.length === 0) {
-    return (
-      <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center transition-colors">
-        <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm shadow-md">
-          <AlertTriangle className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
-          <h3 className="text-lg font-bold text-slate-950 dark:text-white mb-2">No Graph Elements</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-            There are no case records available to generate the relationship graph. Ingest a forensic file in the workstation to view relationships.
-          </p>
-        </div>
-      </div>
-    );
-  }
 
   // Compute unshared nodes per case for expand/collapse logic
   const caseToUnsharedNodes = useMemo(() => {
     const edgeMap = new Map<string, Set<string>>(); // target/source -> set of case IDs
-    data.edges.forEach(e => {
+    (data?.edges || []).forEach(e => {
       const isSourceCase = e.source.startsWith("case-");
       const isTargetCase = e.target.startsWith("case-");
       if (isSourceCase && !isTargetCase) {
@@ -302,7 +289,7 @@ function InnerGraph({ data }: EvidenceGraphProps) {
       }
     });
     return mapping;
-  }, [data.edges]);
+  }, [data]);
 
   // Filter nodes by active type filters + search query
   const visibleNodes = useMemo(() => {
@@ -329,10 +316,10 @@ function InnerGraph({ data }: EvidenceGraphProps) {
   // Node click → open sidebar
   const onNodeClick = useCallback(
     (_: React.MouseEvent, node: Node) => {
-      const raw = data.nodes.find((n) => n.id === node.id);
+      const raw = (data?.nodes || []).find((n) => n.id === node.id);
       if (raw) setSelectedNode(raw as GraphNode);
     },
-    [data.nodes]
+    [data]
   );
 
   const onNodeDoubleClick = useCallback(
@@ -357,8 +344,8 @@ function InnerGraph({ data }: EvidenceGraphProps) {
             const newEdges = json.edges.filter((e: RawEdge) => !existingEdgeIds.has(e.id));
             
             if (newNodes.length > 0 || newEdges.length > 0) {
-              const combinedNodes = [...data.nodes, ...newNodes];
-              const combinedEdges = [...data.edges, ...newEdges];
+              const combinedNodes = [...(data?.nodes || []), ...newNodes];
+              const combinedEdges = [...(data?.edges || []), ...newEdges];
               const layout = getLayoutedElements(combinedNodes, combinedEdges);
               
               setNodes(layout.nodes);
@@ -370,7 +357,7 @@ function InnerGraph({ data }: EvidenceGraphProps) {
         }
       }
     },
-    [nodes, edges, data.nodes, data.edges, setNodes, setEdges, setCollapsedCases]
+    [nodes, edges, data, setNodes, setEdges, setCollapsedCases]
   );
 
   // Focus on a specific node
@@ -379,23 +366,23 @@ function InnerGraph({ data }: EvidenceGraphProps) {
       const node = nodes.find((n) => n.id === nodeId);
       if (node) {
         setCenter(node.position.x + 90, node.position.y + 45, { zoom: 1.5, duration: 600 });
-        const raw = data.nodes.find((n) => n.id === nodeId);
+        const raw = (data?.nodes || []).find((n) => n.id === nodeId);
         if (raw) setSelectedNode(raw as GraphNode);
       }
     },
-    [nodes, setCenter, data.nodes]
+    [nodes, setCenter, data]
   );
 
   // Related nodes for sidebar
   const relatedNodes = useMemo(() => {
     if (!selectedNode) return [];
     const connectedIds = new Set<string>();
-    data.edges.forEach((e) => {
+    (data?.edges || []).forEach((e) => {
       if (e.source === selectedNode.id) connectedIds.add(e.target);
       if (e.target === selectedNode.id) connectedIds.add(e.source);
     });
-    return data.nodes.filter((n) => connectedIds.has(n.id)) as GraphNode[];
-  }, [selectedNode, data.edges, data.nodes]);
+    return (data?.nodes || []).filter((n) => connectedIds.has(n.id)) as GraphNode[];
+  }, [selectedNode, data]);
 
   const toggleFilter = (type: string) => {
     setActiveFilters((prev) => {
@@ -404,6 +391,20 @@ function InnerGraph({ data }: EvidenceGraphProps) {
       return next;
     });
   };
+
+  if (!data || !data.nodes || data.nodes.length === 0) {
+    return (
+      <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 text-center transition-colors">
+        <div className="bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-8 max-w-sm shadow-md">
+          <AlertTriangle className="w-12 h-12 text-slate-400 dark:text-slate-500 mx-auto mb-4" />
+          <h3 className="text-lg font-bold text-slate-950 dark:text-white mb-2">No Graph Elements</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            There are no case records available to generate the relationship graph. Ingest a forensic file in the workstation to view relationships.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="absolute inset-0 bg-slate-50 dark:bg-slate-950 transition-colors duration-300">
