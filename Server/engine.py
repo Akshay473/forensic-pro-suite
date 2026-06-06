@@ -47,6 +47,9 @@ class ForensicEngine:
             b"%PDF": "PDF Document",
             b"PK\x03\x04": "ZIP/Office Archive",
             b"MZ": "Executable (Warning)",
+            b"\xd4\xc3\xb2\xa1": "PCAP Network Capture (Little Endian)",
+            b"\xa1\xb2\xc3\xd4": "PCAP Network Capture (Big Endian)",
+            b"\x0a\x0d\x0d\x0a": "PCAPNG Network Capture",
         }
         try:
             with open(self.evidence_path, "rb") as f:
