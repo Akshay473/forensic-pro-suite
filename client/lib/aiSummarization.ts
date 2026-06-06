@@ -51,19 +51,20 @@ async function callGroqAPI(prompt: string): Promise<string> {
 /**
  * 🔥 Prevent React crash: ensure ALL values become strings
  */
-function normalizeArray(input: any): string[] {
+function normalizeArray(input: unknown): string[] {
   if (!Array.isArray(input)) return [];
 
-  return input.map((item) => {
+  return input.map((item: unknown) => {
     if (typeof item === "string") return item;
 
     if (typeof item === "object" && item !== null) {
-      return (
-        item.finding ||
-        item.Finding ||
-        item.description ||
-        item.Description ||
-        item.text ||
+      const obj = item as Record<string, unknown>;
+      return String(
+        obj.finding ||
+        obj.Finding ||
+        obj.description ||
+        obj.Description ||
+        obj.text ||
         JSON.stringify(item)
       );
     }
@@ -75,7 +76,7 @@ function normalizeArray(input: any): string[] {
 /**
  * Parse JSON safely even if model returns extra text
  */
-function safeJSONParse(text: string): any {
+function safeJSONParse(text: string): Record<string, unknown> {
   try {
     return JSON.parse(text);
   } catch {
