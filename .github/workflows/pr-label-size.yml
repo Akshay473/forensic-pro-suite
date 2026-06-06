@@ -1,0 +1,14 @@
+name: PR Size Labeler
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  label-size:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR size
+        uses: pascalgn/size-label-action@v0.5.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
