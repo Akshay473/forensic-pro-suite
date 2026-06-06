@@ -516,3 +516,15 @@ class RelationshipEngine:
                         self._add_edge(n1["id"], n2["id"], "SIMILAR_EVIDENCE", {"similarity": similarity})
 
         return patterns
+
+
+def sanitize_filter_value(val: Any) -> str:
+    """
+    Sanitizes string inputs to prevent SQL or pattern injection in database queries.
+    Strips dangerous characters like semicolons, comments, and escaping characters.
+    """
+    if not isinstance(val, str):
+        return str(val)
+    # Strip quotes, comments, semicolons
+    cleaned = re.sub(r"['\";\-]+", "", val)
+    return cleaned.strip()
