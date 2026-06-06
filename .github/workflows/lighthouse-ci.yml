@@ -1,0 +1,23 @@
+name: Lighthouse CI Audit
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lighthouse:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Lighthouse CI CLI
+        run: npm install -g @lhci/cli@0.13.x
+
+      - name: Verify Lighthouse Version
+        run: lhci --version
