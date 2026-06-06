@@ -65,5 +65,6 @@ class ForensicEngine:
             "created": datetime.datetime.fromtimestamp(stats.st_ctime, tz=datetime.timezone.utc).isoformat(),
             "modified": datetime.datetime.fromtimestamp(stats.st_mtime, tz=datetime.timezone.utc).isoformat(),
             "accessed": datetime.datetime.fromtimestamp(stats.st_atime, tz=datetime.timezone.utc).isoformat(),
-            "permissions": oct(stats.st_mode)[-3:]
+            "permissions": oct(stats.st_mode)[-3:],
+            "exif": {}
         }
