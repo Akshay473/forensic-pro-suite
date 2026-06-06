@@ -25,7 +25,10 @@ def test_investigator_upload_and_audit(tmp_path):
 
     client = TestClient(app)
     files = {"file": ("small.txt", "hello world")}
-    headers = {"Authorization": "Bearer testtoken123"}
+    headers = {
+        "Authorization": "Bearer testtoken123",
+        "X-Analyze-Key": "forensic-pro-suite-demo-analyze-key"
+    }
     r = client.post("/api/analyze", files=files, headers=headers)
     assert r.status_code == 200
     data = r.json()
