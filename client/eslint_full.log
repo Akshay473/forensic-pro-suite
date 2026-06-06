@@ -1,0 +1,169 @@
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/ai-summary/page.tsx
+   4:20  warning  'useEffect' is defined but never used     @typescript-eslint/no-unused-vars
+   7:10  warning  'supabase' is defined but never used      @typescript-eslint/no-unused-vars
+  16:3   warning  'Download' is defined but never used      @typescript-eslint/no-unused-vars
+  47:17  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  61:26  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/api/analyze/route.ts
+  123:4  error  Parsing error: 'try' expected
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/api/crimeindex/route.ts
+  54:12  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/api/threatmap/route.ts
+  19:10  warning  'inferLocation' is defined but never used  @typescript-eslint/no-unused-vars
+  42:12  warning  'error' is defined but never used          @typescript-eslint/no-unused-vars
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/dashboard/graph/page.tsx
+  156:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/dashboard/graph/page.tsx:156:5
+  154 |
+  155 |   useEffect(() => {
+> 156 |     fetchGraph();
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  157 |   }, []);
+  158 |
+  159 |   return (  react-hooks/set-state-in-effect
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/dashboard/page.tsx
+  1497:17  error  Parsing error: '}' expected
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/login/page.tsx
+   7:23  warning  'Lock' is defined but never used  @typescript-eslint/no-unused-vars
+   7:29  warning  'User' is defined but never used  @typescript-eslint/no-unused-vars
+  34:14  warning  'err' is defined but never used   @typescript-eslint/no-unused-vars
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/app/signup/page.tsx
+  91:14  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/RobotAssistant.tsx
+  25:9   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/RobotAssistant.tsx:25:9
+  23 |       const saved = localStorage.getItem("forensic_chat_history");
+  24 |       if (saved) {
+> 25 |         setMessages(JSON.parse(saved));
+     |         ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  26 |       }
+  27 |     } catch {
+  28 |       // fail silently  react-hooks/set-state-in-effect
+  72:14  warning  'error' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/Terminal.tsx
+  288:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/Terminal.tsx:288:5
+  286 |   const [mounted, setMounted] = useState(false);
+  287 |   useEffect(() => {
+> 288 |     setMounted(true);
+      |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  289 |   }, []);
+  290 |   const { resolvedTheme } = useTheme();
+  291 |   const isDark = resolvedTheme === "dark";  react-hooks/set-state-in-effect
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/ThemeToggle.tsx
+  12:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/ThemeToggle.tsx:12:5
+  10 |
+  11 |   useEffect(() => {
+> 12 |     setMounted(true);
+     |     ^^^^^^^^^^ Avoid calling setState() directly within an effect
+  13 |   }, []);
+  14 |
+  15 |   if (!mounted) return null;  react-hooks/set-state-in-effect
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/ThreatIntelligenceFeed.tsx
+  44:5  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/ThreatIntelligenceFeed.tsx:44:5
+  42 |       });
+  43 |     }
+> 44 |     setLogs(initialLogs);
+     |     ^^^^^^^ Avoid calling setState() directly within an effect
+  45 |   }, []);
+  46 |
+  47 |   useEffect(() => {  react-hooks/set-state-in-effect
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/graph/EvidenceGraph.tsx
+    3:43  warning  'useRef' is defined but never used                                                                                                                                                             @typescript-eslint/no-unused-vars
+   22:44  warning  'Activity' is defined but never used                                                                                                                                                           @typescript-eslint/no-unused-vars
+   22:54  warning  'Maximize2' is defined but never used                                                                                                                                                          @typescript-eslint/no-unused-vars
+   22:65  warning  'Minimize2' is defined but never used                                                                                                                                                          @typescript-eslint/no-unused-vars
+  281:31  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?      react-hooks/rules-of-hooks
+  308:24  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?      react-hooks/rules-of-hooks
+  330:23  error    React Hook "useCallback" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+  338:29  error    React Hook "useCallback" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+  377:27  error    React Hook "useCallback" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?  react-hooks/rules-of-hooks
+  390:24  error    React Hook "useMemo" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?      react-hooks/rules-of-hooks
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/graph/ProvenanceSidebar.tsx
+  140:49  error    React Hook "React.useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/rules-of-hooks
+  141:10  warning  'loading' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  @typescript-eslint/no-unused-vars
+  141:33  error    React Hook "React.useState" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              react-hooks/rules-of-hooks
+  143:3   error    React Hook "React.useEffect" is called conditionally. React Hooks must be called in the exact same order in every component render. Did you accidentally call a React Hook after an early return?                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react-hooks/rules-of-hooks
+  179:7   error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/components/graph/ProvenanceSidebar.tsx:179:7
+  177 |
+  178 |     if (!caseId) {
+> 179 |       setProvenanceChain(fallbackChain);
+      |       ^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  180 |       return;
+  181 |     }
+  182 |  react-hooks/set-state-in-effect
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/lib/aiSummarization.ts
+  54:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  78:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/lib/auth.ts
+  60:31  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  66:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  67:26  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/tanmayy/Desktop/Project/forensic-pro-suite/client/lib/csvExport.ts
+  31:7  error  'text' is never reassigned. Use 'const' instead  prefer-const
+
+✖ 41 problems (25 errors, 16 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
+
