@@ -1,0 +1,21 @@
+name: Automated Changelog
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  generate-changelog:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate Changelog
+        run: |
+          echo "# Changelog" > CHANGELOG_NEW.md
+          git log --oneline --pretty=format:"* %s (%h)" >> CHANGELOG_NEW.md
