@@ -20,7 +20,6 @@ import { exportCasesToCSV } from "../../lib/csvExport";
 import Footer from "@/components/Footer";
 import ThemeToggle from "@/components/ThemeToggle";
 import ToolModal from "@/components/ToolModal";
-import BackToTop from "@/components/BackToTop";
 import {
   Search,
   Activity,
@@ -1494,7 +1493,7 @@ export default function DashboardPage() {
                   >
                     No cases found matching &quot;{searchQuery}&quot;
                   </motion.div>
-                ))}
+                )}
               </AnimatePresence>
             </div>
           </motion.section>
@@ -1516,7 +1515,6 @@ export default function DashboardPage() {
         tool={selectedTool} 
         onClose={() => setSelectedTool(null)} 
       />
-     <BackToTop />
     </div>
   );
 }
