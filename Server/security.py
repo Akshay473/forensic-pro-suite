@@ -279,3 +279,18 @@ LIMITER_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "30"))
 LIMITER_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
 global_rate_limiter = RateLimiter(LIMITER_REQUESTS, LIMITER_WINDOW)
 
+
+
+# JWT validation helpers
+def verify_jwt_token(token: str, secret: str, algorithms: list[str] = ["HS256"]) -> dict:
+    """
+    Decodes and validates a JWT signature and checks expiry/issued claims.
+    """
+    import jwt
+    try:
+        payload = jwt.decode(token, secret, algorithms=algorithms)
+        return {"status": "valid", "payload": payload}
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired.")
+    except jwt.InvalidTokenError:
+        raise HTTPException(status_code=401, detail="Invalid token signature.")
