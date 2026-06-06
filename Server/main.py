@@ -16,6 +16,7 @@ import os
 import time
 import logging
 import hashlib
+import hmac
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -92,9 +93,9 @@ def get_api_user(authorization: str | None = Header(None)):
     admin_token = os.getenv("ADMIN_TOKEN")
     investigator_token = os.getenv("INVESTIGATOR_TOKEN")
 
-    if admin_token and token == admin_token:
+    if admin_token and hmac.compare_digest(token, admin_token):
         return {"id": "admin", "role": "admin", "token": token}
-    if investigator_token and token == investigator_token:
+    if investigator_token and hmac.compare_digest(token, investigator_token):
         return {"id": "investigator", "role": "investigator", "token": token}
 
     raise HTTPException(status_code=403, detail="Forbidden")
