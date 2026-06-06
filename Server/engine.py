@@ -9,14 +9,11 @@ class ForensicEngine:
         self.report_data = {}
 
     def run_automated_process(self):
-        print("Starting Identification...")
         sha256 = self.generate_hash("sha256")
         md5 = self.generate_hash("md5")
 
-        print("Verifying Magic Numbers...")
         magic_verified, file_sig = self.verify_file_signature()
 
-        print("Collecting Advanced Metadata...")
         metadata = self.get_metadata()
         metadata["magic_signature"] = file_sig
         metadata["signature_match"] = magic_verified
