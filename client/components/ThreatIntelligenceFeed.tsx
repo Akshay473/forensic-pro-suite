@@ -41,7 +41,9 @@ export default function ThreatIntelligenceFeed() {
         category: randomLog.category,
       });
     }
-    setLogs(initialLogs);
+    requestAnimationFrame(() => {
+      setLogs(initialLogs);
+    });
   }, []);
 
   useEffect(() => {
