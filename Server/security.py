@@ -280,3 +280,16 @@ LIMITER_REQUESTS = int(os.getenv("RATE_LIMIT_REQUESTS", "30"))
 LIMITER_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", "60"))
 global_rate_limiter = RateLimiter(LIMITER_REQUESTS, LIMITER_WINDOW)
 
+
+
+def sanitize_xss_input(html_content: str) -> str:
+    """
+    Sanitizes HTML/text to prevent script injection and basic XSS vectors.
+    """
+    if not html_content:
+        return ""
+    # Strip tags like <script>, <iframe>, etc.
+    clean = re.sub(r"<script.*?>.*?</script>", "", html_content, flags=re.IGNORECASE)
+    clean = re.sub(r"<iframe.*?>.*?</iframe>", "", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"on\w+\s*=", "", clean, flags=re.IGNORECASE)
+    return clean
