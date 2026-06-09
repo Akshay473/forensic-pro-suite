@@ -83,3 +83,21 @@ def validate_supabase_connection() -> Dict[str, Any]:
             "message": f"Supabase health check connection failed: {str(e)}"
         }
 
+
+
+def backup_server_config(config_data: dict, dest_path: str) -> str:
+    """
+    Saves environment variables/configuration profiles in JSON format with a SHA256 checksum verification.
+    """
+    import json
+    import hashlib
+    serialized = json.dumps(config_data, sort_keys=True, indent=2)
+    checksum = hashlib.sha256(serialized.encode()).hexdigest()
+    
+    payload = {
+        "checksum": checksum,
+        "config": config_data
+    }
+    with open(dest_path, "w") as f:
+        json.dump(payload, f, indent=2)
+    return checksum
