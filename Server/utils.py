@@ -83,3 +83,18 @@ def validate_supabase_connection() -> Dict[str, Any]:
             "message": f"Supabase health check connection failed: {str(e)}"
         }
 
+
+
+def wrap_api_response(data: Any = None, success: bool = True, message: str = "", error_code: Optional[str] = None) -> Dict[str, Any]:
+    """
+    Standard envelope format for backend API responses.
+    """
+    return {
+        "success": success,
+        "message": message,
+        "data": data,
+        "error": {
+            "code": error_code,
+            "details": message if not success else None
+        } if not success else None
+    }
