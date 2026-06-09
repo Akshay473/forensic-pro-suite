@@ -251,12 +251,14 @@ class RateLimiter:
         # maps client identifier (e.g. IP) to list of request timestamps
         self.requests = collections.defaultdict(list)
 
-    def is_allowed(self, client_id: str) -> tuple[bool, int, int]:
+    def is_allowed(self, client_id: str, whitelist: list[str] | None = None) -> tuple[bool, int, int]:
         """
         Checks if client request is within rate limits.
         Returns:
             (is_allowed, remaining_requests, reset_seconds)
         """
+        if whitelist and client_id in whitelist:
+            return True, self.requests_limit, 0
         now = time.time()
         client_history = self.requests[client_id]
         
