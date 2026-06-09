@@ -49,3 +49,20 @@ def validate_environment():
 
 if __name__ == "__main__":
     validate_environment()
+
+
+def generate_default_env_template(filepath: str = ".env.generated"):
+    """
+    Creates a template env file with pre-populated dummy security tokens for local testing.
+    """
+    template = (
+        "# FORENSIC PRO SUITE AUTO-GENERATED TEMPLATE\n"
+        "SUPABASE_URL=https://placeholder-project-id.supabase.co\n"
+        "SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.placeholder\n"
+        "ADMIN_TOKEN=forensic-admin-super-token-12345\n"
+        "INVESTIGATOR_TOKEN=forensic-investigator-secure-token-56789\n"
+        "ANALYZE_API_KEY=forensic-pro-suite-demo-analyze-key\n"
+    )
+    with open(filepath, "w") as f:
+        f.write(template)
+    logger.info(f"Successfully generated clean environment template at: {filepath}")
