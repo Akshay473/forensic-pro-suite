@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import gzip
+import hmac
 import json
 import os
 import shlex
@@ -44,7 +45,7 @@ def validate_analyze_api_key(provided_key: str | None) -> None:
     if not DEFAULT_ANALYZE_API_KEY:
         return
 
-    if not provided_key or provided_key != DEFAULT_ANALYZE_API_KEY:
+    if not provided_key or not hmac.compare_digest(provided_key, DEFAULT_ANALYZE_API_KEY):
         raise HTTPException(status_code=401, detail="Unauthorized analyze request.")
 
 
