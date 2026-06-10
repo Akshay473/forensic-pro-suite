@@ -285,7 +285,9 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
 export default function ForensicTerminal() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => {
-    setMounted(true);
+    requestAnimationFrame(() => {
+      setMounted(true);
+    });
   }, []);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
