@@ -9,14 +9,11 @@ class ForensicEngine:
         self.report_data = {}
 
     def run_automated_process(self):
-        print("Starting Identification...")
         sha256 = self.generate_hash("sha256")
         md5 = self.generate_hash("md5")
 
-        print("Verifying Magic Numbers...")
         magic_verified, file_sig = self.verify_file_signature()
 
-        print("Collecting Advanced Metadata...")
         metadata = self.get_metadata()
         metadata["magic_signature"] = file_sig
         metadata["signature_match"] = magic_verified
@@ -47,6 +44,9 @@ class ForensicEngine:
             b"%PDF": "PDF Document",
             b"PK\x03\x04": "ZIP/Office Archive",
             b"MZ": "Executable (Warning)",
+            b"\xd4\xc3\xb2\xa1": "PCAP Network Capture (Little Endian)",
+            b"\xa1\xb2\xc3\xd4": "PCAP Network Capture (Big Endian)",
+            b"\x0a\x0d\x0d\x0a": "PCAPNG Network Capture",
         }
         try:
             with open(self.evidence_path, "rb") as f:
@@ -65,5 +65,6 @@ class ForensicEngine:
             "created": datetime.datetime.fromtimestamp(stats.st_ctime, tz=datetime.timezone.utc).isoformat(),
             "modified": datetime.datetime.fromtimestamp(stats.st_mtime, tz=datetime.timezone.utc).isoformat(),
             "accessed": datetime.datetime.fromtimestamp(stats.st_atime, tz=datetime.timezone.utc).isoformat(),
-            "permissions": oct(stats.st_mode)[-3:]
+            "permissions": oct(stats.st_mode)[-3:],
+            "exif": {}
         }
