@@ -19,15 +19,20 @@ export default function RobotAssistant() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem("forensic_chat_history");
-      if (saved) {
-        setMessages(JSON.parse(saved));
+    const saved = localStorage.getItem("forensic_chat_history");
+    if (saved) {
+      try {
+        const history = JSON.parse(saved);
+        requestAnimationFrame(() => {
+          setMessages(history);
+        });
+      } catch {
+        // fail silently
       }
-    } catch {
-      // fail silently
     }
-    setIsLoaded(true);
+    requestAnimationFrame(() => {
+      setIsLoaded(true);
+    });
   }, []);
 
   useEffect(() => {
@@ -69,7 +74,7 @@ export default function RobotAssistant() {
 
       const data = await response.json();
       setMessages(prev => [...prev, { role: "model", content: data.response }]);
-    } catch (error) {
+    } catch {
       setMessages(prev => [...prev, { role: "model", content: "I encountered an error connecting to the intelligence network. Please try again." }]);
     } finally {
       setIsLoading(false);
