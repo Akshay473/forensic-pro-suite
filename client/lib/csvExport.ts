@@ -28,7 +28,7 @@ export function formatCsvValue(value: unknown): string {
   if (value == null) return '""';
   
   // Safely handle nested objects/arrays to prevent "[object Object]" print bugs
-  let text = typeof value === "object" ? JSON.stringify(value) : String(value);
+  const text = typeof value === "object" ? JSON.stringify(value) : String(value);
   
   // RFC 4180 requirement: If quotes, commas, or line breaks exist, escape quotes and wrap in quotes
   if (/[",\r\n]/.test(text)) {
