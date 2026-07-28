@@ -679,17 +679,34 @@ export default function DashboardPage() {
       formData.append("file", file);
 
       try {
-        const response = await fetch("/api/analyze", {
-          method: "POST",
-          body: formData,
+        const xhr = new XMLHttpRequest();
+
+        const data = await new Promise<AnalysisResult>((resolve, reject) => {
+          xhr.upload.onprogress = (evt) => {
+            if (evt.lengthComputable) {
+              const pct = Math.round((evt.loaded / evt.total) * 100);
+              setUploadProgress(Math.min(pct, 99));
+            }
+          };
+
+          xhr.onload = () => {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                resolve(JSON.parse(xhr.responseText));
+              } catch {
+                reject(new Error("Failed to parse response"));
+              }
+            } else {
+              reject(new Error(`Server returned status code: ${xhr.status}`));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error("Network error"));
+
+          xhr.open("POST", "/api/analyze");
+          xhr.send(formData);
         });
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          throw new Error(errorData?.error || `Server returned status code: ${response.status}`);
-        }
-
-        const data: AnalysisResult = await response.json();
         setUploadProgress(100);
 
         // Save live response to states

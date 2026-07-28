@@ -92,12 +92,12 @@ export default function AISummaryPage() {
 
     const xhr = new XMLHttpRequest();
 
-    xhr.upload.onprogress = (evt) => {
-      if (evt.lengthComputable) {
-        const pct = Math.round((evt.loaded / evt.total) * 100);
-        setUploadProgress(Math.min(pct, 95));
-      }
-    };
+      xhr.upload.onprogress = (evt) => {
+        if (evt.lengthComputable) {
+          const pct = Math.round((evt.loaded / evt.total) * 100);
+          setUploadProgress(Math.min(pct, 100));
+        }
+      };
 
     xhr.onload = async () => {
       if (xhr.status >= 200 && xhr.status < 300) {
