@@ -537,7 +537,7 @@ const data = await response.json();
                             Key Findings
                           </p>
                           <ul className="space-y-2">
-                            {analysis.aiSummary.keyFindings.map((f, i) => (
+                            {analysis.aiSummary.(keyFindings ?? []).map((f, i) => (
                               <li key={i} className="text-sm text-slate-700 dark:text-slate-300 flex gap-2">
                                 <span className="text-emerald-600 dark:text-emerald-400 font-bold">•</span>
                                 {safeText(f)}
