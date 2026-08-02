@@ -71,7 +71,8 @@ export default function AISummaryPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ caseData, type: "detailed" }),
       });
-      const data = await response.json();
+      if (!response.ok) throw new Error("Request failed");
+const data = await response.json();
       return data.summary;
     } catch (err) {
       console.error("AI summary failed:", err);
