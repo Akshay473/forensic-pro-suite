@@ -437,7 +437,7 @@ const data = await response.json();
 
         {/* Analysis Results */}
         <AnimatePresence>
-          {analyses.map((analysis, idx) => (
+          {(analyses ?? []).map((analysis, idx) => (
             <motion.div
               key={`${analysis.case_id}-${idx}`}
               initial={{ opacity: 0, y: 20 }}
