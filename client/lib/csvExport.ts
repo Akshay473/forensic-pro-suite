@@ -25,7 +25,7 @@ const HEADER_LABELS: Record<CsvColumn, string> = {
  * Robust RFC 4180 compliant CSV value formatting with auto-escaping.
  */
 export function formatCsvValue(value: unknown): string {
-  if (value == null) return '""';
+  if (value === null) return '""';
   
   // Safely handle nested objects/arrays to prevent "[object Object]" print bugs
   let text = typeof value === "object" ? JSON.stringify(value) : String(value);
