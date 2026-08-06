@@ -59,7 +59,7 @@ export default function AISummaryPage() {
 
   // Safe text renderer
   const safeText = (val: any): string => {
-    if (val == null) return "";
+    if (val === null) return "";
     if (typeof val === "string" || typeof val === "number") return String(val);
     return JSON.stringify(val);
   };
