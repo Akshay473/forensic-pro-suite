@@ -167,7 +167,7 @@ function ForensicTerminalContent({ isDark }: { isDark: boolean }) {
         term.write("\r\n");
         const trimmed = currentLine.trim();
         if (trimmed) {
-          if (commandHistory.length === 0 || commandHistory[commandHistory.length - 1] !== trimmed) {
+          if (commandHistory.length === 0 || commandHistory.at(-1) !== trimmed) {
             commandHistory.push(trimmed);
           }
           historyIndex = commandHistory.length;
