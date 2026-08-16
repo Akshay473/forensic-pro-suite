@@ -27,23 +27,48 @@ export const generateForensicReport = async (
   const pageHeight = doc.internal.pageSize.getHeight();
   const timestamp = data.created_at ? new Date(data.created_at).toLocaleString() : new Date().toLocaleString();
 
+  let logoBase64 = "";
+  try {
+    const res = await fetch("/favicon.png");
+    const blob = await res.blob();
+    logoBase64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } catch (err) {
+    console.error("Failed to load logo image:", err);
+  }
+
   // Helper for Header
   const addHeader = (pdf: jsPDF) => {
     // Branding Bar
     pdf.setFillColor(15, 23, 42); // Slate 900
     pdf.rect(0, 0, pageWidth, 35, 'F');
     
+    // Logo Text / Image
+    let textStartX = 15;
+    if (logoBase64) {
+      try {
+        pdf.addImage(logoBase64, 'PNG', 15, 7, 20, 20);
+        textStartX = 40;
+      } catch (err) {
+        console.error('Failed to add logo to PDF:', err);
+      }
+    }
+    
     // Logo Text
     pdf.setFontSize(22);
     pdf.setTextColor(16, 185, 129); // Emerald 500
     pdf.setFont('helvetica', 'bold');
-    pdf.text('SENTINEL-FORENSICS', 15, 22);
+    pdf.text('SENTINEL-FORENSICS', textStartX, 22);
     
     // Subtitle
     pdf.setFontSize(10);
     pdf.setTextColor(148, 163, 184); // Slate 400
     pdf.setFont('helvetica', 'normal');
-    pdf.text('DIGITAL EVIDENCE & CHAIN-OF-CUSTODY SYSTEM', 15, 28);
+    pdf.text('DIGITAL EVIDENCE & CHAIN-OF-CUSTODY SYSTEM', textStartX, 28);
     
     // Case ID Highlight
     pdf.setFillColor(30, 41, 59); // Slate 800

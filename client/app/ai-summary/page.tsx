@@ -172,20 +172,44 @@ export default function AISummaryPage() {
     URL.revokeObjectURL(url);
   };
 
-  const downloadPDF = (analysis: AnalysisResult) => {
+  const downloadPDF = async (analysis: AnalysisResult) => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const timestamp = new Date().toLocaleString();
 
+    let logoBase64 = "";
+    try {
+      const res = await fetch("/favicon.png");
+      const blob = await res.blob();
+      logoBase64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+    } catch (err) {
+      console.error("Failed to load logo image:", err);
+    }
+
     // Header
     doc.setFillColor(88, 28, 135); // Purple
     doc.rect(0, 0, pageWidth, 30, "F");
 
+    let textStartX = 15;
+    if (logoBase64) {
+      try {
+        doc.addImage(logoBase64, 'PNG', 15, 5, 20, 20);
+        textStartX = 40;
+      } catch (err) {
+        console.error('Failed to add logo to PDF:', err);
+      }
+    }
+
     doc.setFontSize(18);
     doc.setTextColor(255, 255, 255);
     doc.setFont("helvetica", "bold");
-    doc.text("AI Forensic Analysis Report", 15, 20);
+    doc.text("AI Forensic Analysis Report", textStartX, 19);
 
     // Case Info Box
     doc.setFillColor(230, 230, 250);
